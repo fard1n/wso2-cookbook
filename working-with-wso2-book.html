@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Working with WSO2 APIM 4.7 &amp; MI 4.5 — Developer Field Guide &amp; Study Book</title>
+  <style>
+    :root {
+      --bg: #0c1117;
+      --panel: #161f28;
+      --card: #1c2633;
+      --line: #2e3e50;
+      --line-bright: #445973;
+      --text: #eef3f8;
+      --muted: #95a7ba;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --green: #3fb950;
+      --yellow: #f0c14b;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --code-bg: #090d12;
+      --sidebar-width: 280px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f6f8fa;
+      --panel: #ffffff;
+      --card: #f0f3f6;
+      --line: #d0d7de;
+      --line-bright: #afb8c1;
+      --text: #1f2328;
+      --muted: #656d76;
+      --accent: #0969da;
+      --accent-hover: #218bff;
+      --green: #1a7f37;
+      --yellow: #9a6700;
+      --red: #cf222e;
+      --purple: #8250df;
+      --code-bg: #eaeef2;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Reading Progress Bar */
+    #progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 100;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+    }
+
+    /* Sidebar Navigation */
+    aside {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+    }
+    .sidebar-header {
+      padding: 1.2rem 1rem 0.8rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .sidebar-header h1 {
+      font-size: 1.05rem;
+      margin: 0 0 0.3rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .sidebar-header p {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .search-box {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.45rem 0.65rem;
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem 0.5rem;
+      list-style: none;
+      margin: 0;
+    }
+    .nav-item { margin-bottom: 2px; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 0.45rem 0.65rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .nav-link:hover {
+      background: var(--card);
+      color: var(--text);
+    }
+    .nav-link.active {
+      background: var(--card);
+      color: var(--accent);
+      font-weight: 600;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+    }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      background: var(--line);
+      border-radius: 10px;
+      color: var(--text);
+    }
+
+    .sidebar-footer {
+      padding: 0.85rem 1rem;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    /* Main Content Area */
+    main {
+      flex: 1;
+      padding: 2rem 2.5rem 5rem;
+      max-width: 980px;
+      overflow-y: visible;
+    }
+
+    /* Chapter Section Styling */
+    section.chapter-section {
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 3.5rem;
+      margin-bottom: 3.5rem;
+    }
+    section.chapter-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 1rem;
+    }
+
+    .chapter-header {
+      margin-bottom: 1.5rem;
+    }
+    .doc-meta {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .pill-blue { background: rgba(88, 166, 255, 0.15); color: var(--accent); border: 1px solid rgba(88, 166, 255, 0.3); }
+    .pill-green { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid rgba(63, 185, 80, 0.3); }
+    .pill-yellow { background: rgba(240, 193, 75, 0.15); color: var(--yellow); border: 1px solid rgba(240, 193, 75, 0.3); }
+
+    h2.chapter-title {
+      font-size: 1.7rem;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+    p.lead {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+    }
+
+    /* Content Typography */
+    h3 {
+      font-size: 1.25rem;
+      color: var(--accent);
+      margin: 2rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--line);
+    }
+    h4 {
+      font-size: 1.05rem;
+      color: var(--text);
+      margin: 1.4rem 0 0.5rem;
+    }
+    p, li {
+      color: var(--text);
+      line-height: 1.65;
+    }
+    ul, ol { padding-left: 1.4rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* Cards & Callouts */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1.2rem;
+      margin: 1.2rem 0;
+    }
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--card);
+      padding: 0.85rem 1.1rem;
+      margin: 1.2rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .callout.warn { border-left-color: var(--yellow); }
+    .callout.danger { border-left-color: var(--red); }
+    .callout.success { border-left-color: var(--green); }
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .callout.warn .callout-title { color: var(--yellow); }
+    .callout.danger .callout-title { color: var(--red); }
+    .callout.success .callout-title { color: var(--green); }
+
+    /* Code blocks */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace;
+      background: var(--card);
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+      color: var(--accent);
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: monospace;
+    }
+    .code-header + pre {
+      border-radius: 0 0 8px 8px;
+      margin-top: 0;
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--line-bright);
+      color: var(--muted);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.72rem;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.2rem 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+    }
+    th {
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+
+    /* Interactive URL Calculator Tool */
+    .calculator-box {
+      background: var(--panel);
+      border: 1px solid var(--line-bright);
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin: 1.5rem 0;
+    }
+    .calc-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 0.8rem;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+    .calc-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .calc-input {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 0.88rem;
+      width: 100%;
+    }
+    .calc-result {
+      margin-top: 1.2rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+    .calc-result-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.35rem;
+      font-weight: bold;
+    }
+    .calc-val {
+      font-family: monospace;
+      font-size: 0.95rem;
+      word-break: break-all;
+    }
+    .badge-ok { color: var(--green); }
+    .badge-bad { color: var(--red); }
+
+    /* Interactive Status Code Grid */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.65rem;
+      margin: 1rem 0;
+    }
+    .status-btn {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: var(--text);
+    }
+    .status-btn:hover, .status-btn.active {
+      border-color: var(--accent);
+      background: var(--card);
+      transform: translateY(-2px);
+    }
+    .status-code {
+      font-size: 1.2rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .status-title {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .status-detail-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin-top: 0.75rem;
+    }
+
+    /* Quiz Component */
+    .quiz-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1.3rem;
+      margin: 1.5rem 0;
+    }
+    .quiz-q {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.85rem;
+      color: var(--text);
+    }
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .quiz-opt {
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 0.6rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.15s ease;
+      text-align: left;
+      color: var(--text);
+    }
+    .quiz-opt:hover {
+      border-color: var(--accent);
+    }
+    .quiz-opt.correct {
+      background: rgba(63, 185, 80, 0.15);
+      border-color: var(--green);
+      color: var(--green);
+      font-weight: 600;
+    }
+    .quiz-opt.wrong {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .quiz-feedback {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      body { flex-direction: column; }
+      aside {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .nav-list { max-height: 220px; }
+      main { padding: 1.5rem 1.2rem; }
+      .calc-row { grid-template-columns: 1fr; gap: 0.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-container"><div id="progress-bar"></div></div>
+
+  <!-- Left Sidebar Navigation -->
+  <aside>
+    <div class="sidebar-header">
+      <h1><span>📘</span> WSO2 Field Guide</h1>
+      <p>Developer &amp; Practitioner Study Book (APIM 4.7 &amp; MI 4.5)</p>
+    </div>
+
+    <!-- Companion Books Switcher inside Drawer -->
+    <div style="padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); background: rgba(88, 166, 255, 0.04);">
+      <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem;">Documentation Library</div>
+      <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+        <a href="index.html" style="color: var(--text); text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>📖 1. APIM 4.7 Cookbook</span><span>Cookbook</span></a>
+        <a href="wso2-portals-guide-book.html" style="color: var(--text); text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>📘 2. Portals Architecture Guide</span><span>Guide</span></a>
+        <a href="working-with-wso2-book.html" style="background: rgba(88, 166, 255, 0.15); color: var(--accent); font-weight: 600; text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>📗 3. Field Manual (12 Ch)</span><span>Current</span></a>
+        <a href="architecture-flow-interactive.html" style="color: var(--text); text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>⚡ 4. Architecture Simulator</span><span>Simulator</span></a>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="search" id="nav-search" placeholder="Search topics, codes, terms..." />
+    </div>
+    <ul class="nav-list" id="chapter-list">
+      <li class="nav-item"><a class="nav-link active" href="#ch1"><span>1. Mental Model</span><span class="nav-badge">Overview</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch2"><span>2. MI Workspace &amp; Anatomy</span><span class="nav-badge">MI 4.5</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch3"><span>3. Kind B: Data Services</span><span class="nav-badge">Data</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch4"><span>4. Mediators &amp; Transformation</span><span class="nav-badge">EIP</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch5"><span>5. Packaging: The CAR Rule</span><span class="nav-badge">Packaging</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch6"><span>6. The Bridge: Service Catalog</span><span class="nav-badge">Catalog</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch7"><span>7. APIM Publisher: Designing</span><span class="nav-badge">APIM</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch8"><span>8. The Endpoint Rule</span><span class="nav-badge">Trap</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch9"><span>9. Lifecycle: Deploy ≠ Publish</span><span class="nav-badge">APIM</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch10"><span>10. Devportal: Keys &amp; Tokens</span><span class="nav-badge">Devportal</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch11"><span>11. Status Code Diagnostics</span><span class="nav-badge">Triage</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ch12"><span>12. Knowledge Check &amp; Labs</span><span class="nav-badge">Quiz</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <span>Offline Study Guide</span>
+      <button class="theme-toggle" id="theme-btn">🌓 Theme</button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main id="content-container">
+
+    <!-- Top Companion Books Switcher Bar -->
+    <nav style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.8rem; padding: 0.5rem 0.8rem; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+      <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-right: 0.3rem;">Library:</span>
+      <a href="index.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);">📖 APIM 4.7 Cookbook</a>
+      <a href="wso2-portals-guide-book.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);">📘 Portals Architecture Guide</a>
+      <a href="working-with-wso2-book.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; background: rgba(88, 166, 255, 0.15); border: 1px solid var(--accent); color: var(--accent); font-weight: 600; text-decoration: none;">📗 Field Manual (12 Ch)</a>
+      <a href="architecture-flow-interactive.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);">⚡ Architecture Simulator</a>
+    </nav>
+
+    <!-- CHAPTER 1 -->
+    <section class="chapter-section" id="ch1">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 1 of 12</span>
+          <span class="pill pill-green">Overview</span>
+        </div>
+        <h2 class="chapter-title">1. The Practitioner's Mental Model</h2>
+        <p class="lead">Understand the core division of labor between WSO2 Micro Integrator (building integration logic) and API Manager (governing APIs).</p>
+      </div>
+
+      <h3>The Two Engines &amp; Who Does What</h3>
+      <p>When working with WSO2, the foundational mental model is understanding that <strong>Micro Integrator (MI)</strong> and <strong>API Manager (APIM)</strong> serve two fundamentally distinct purposes:</p>
+      
+      <table>
+        <thead>
+          <tr><th>Capability</th><th>WSO2 Micro Integrator (MI 4.5)</th><th>WSO2 API Manager (APIM 4.7)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Role</strong></td><td>Integration Engine / ESB</td><td>API Management &amp; Gateway</td></tr>
+          <tr><td><strong>Primary Job</strong></td><td>Data transformation, orchestration, calling databases, EIP.</td><td>Security (OAuth2/JWT), rate limiting, lifecycle, analytics.</td></tr>
+          <tr><td><strong>Interface</strong></td><td>VS Code Extension / Integration Studio (.car files)</td><td>Web Portals (Publisher, Devportal, Admin)</td></tr>
+          <tr><td><strong>Consumer</strong></td><td>Called internally by APIM or backend systems.</td><td>Invoked directly by external apps, clients, and partners.</td></tr>
+          <tr><td><strong>Ports</strong></td><td><code>8290</code> (HTTP), <code>8253</code> (HTTPS)</td><td><code>8243</code> (Gateway), <code>9443</code> (Portals/Management)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Kind A vs. Kind B APIs</h3>
+      <p>Every API in your organization falls into one of two implementation patterns:</p>
+      <div class="card">
+        <h4>1. Kind A: Direct HTTP Proxy (Publisher Only)</h4>
+        <p>Your backend is already a modern REST API that speaks JSON over HTTP. You do <strong>not</strong> need MI here. You go straight to <strong>Publisher → Create API → Import OpenAPI</strong>, enter the backend URL, configure rate limits, and publish.</p>
+      </div>
+      <div class="card">
+        <h4>2. Kind B: Integration / Data Service (MI + APIM)</h4>
+        <p>Your backend is a database table (SQL Server, PostgreSQL), a legacy SOAP service, or requires calling multiple APIs and merging their JSON responses. You build this in <strong>MI</strong> first, deploy it as a <strong>Data Service (.dbs)</strong> or Integration API, push it to APIM via <strong>Service Catalog</strong>, and then govern it in Publisher.</p>
+      </div>
+
+      <h3>The Portals Landscape</h3>
+      <ul>
+        <li><strong>Publisher (<code>/publisher</code>)</strong>: For API developers. Design APIs, set endpoint URLs, attach policies, manage lifecycle.</li>
+        <li><strong>Devportal (<code>/devportal</code>)</strong>: For API consumers. Browse published APIs, create applications, generate OAuth2 keys and Bearer tokens.</li>
+        <li><strong>Admin (<code>/admin</code>)</strong>: For platform administrators. Configure Rate Limiting tiers (Gold, Silver, Unlimited) and Key Managers.</li>
+        <li><strong>Gateway (<code>https://api.parspc.ir</code>)</strong>: The traffic runtime engine. <em>Has no login UI</em>. Accepts client requests with Bearer tokens.</li>
+      </ul>
+    </section>
+
+    <!-- CHAPTER 2 -->
+    <section class="chapter-section" id="ch2">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 2 of 12</span>
+          <span class="pill pill-green">MI 4.5</span>
+        </div>
+        <h2 class="chapter-title">2. MI Workspace &amp; Project Anatomy</h2>
+        <p class="lead">Navigating the VS Code WSO2 extension, project files, and the core Synapse integration building blocks.</p>
+      </div>
+
+      <h3>Tooling: The Modern VS Code Extension</h3>
+      <p>WSO2 MI 4.5 development centers on the <strong>WSO2 Micro Integrator extension for Visual Studio Code</strong>. It provides a graphical low-code canvas alongside direct Synapse XML editing.</p>
+
+      <h3>Integration Project File Structure</h3>
+      <p>A typical MI project in VS Code contains:</p>
+      <pre><code>my-integration-project/
+├── pom.xml                               # Maven build configuration &amp; dependencies
+└── src/main/wso2mi/
+    └── artifacts/
+        ├── apis/                         # REST APIs exposed by MI
+        ├── data-services/                # .dbs files (database queries)
+        ├── endpoints/                    # Target backend definitions
+        ├── sequences/                    # Reusable mediation pipelines
+        └── local-entries/                # XML/JSON schemas or XSLT files</code></pre>
+
+      <h3>The Core Building Blocks</h3>
+      <ul>
+        <li><strong>API (<code>&lt;api&gt;</code>)</strong>: Exposes a REST HTTP listener on MI (port <code>8290</code>/<code>8253</code>) with defined context and resources.</li>
+        <li><strong>Sequence (<code>&lt;sequence&gt;</code>)</strong>: An ordered pipeline of mediators that process a request or response. Common types include:
+          <ul>
+            <li><em>In-Sequence</em>: Handles incoming request messages.</li>
+            <li><em>Out-Sequence</em>: Handles response messages before returning to caller.</li>
+            <li><em>Fault-Sequence</em>: Triggered whenever an exception or timeout occurs.</li>
+          </ul>
+        </li>
+        <li><strong>Endpoint (<code>&lt;endpoint&gt;</code>)</strong>: Defines downstream target addresses, including timeouts, retries, and load-balancing.</li>
+      </ul>
+
+      <div class="callout warn">
+        <div class="callout-title">⚠️ VS Code Testing: Build vs. Export</div>
+        <p><strong>Build and Run</strong> runs the project on your local PC's embedded MI runtime for rapid testing. When deploying to the server (e.g. <code>wso-mi-1</code>), always use <strong>Export</strong> to generate the <code>.car</code> package!</p>
+      </div>
+    </section>
+
+    <!-- CHAPTER 3 -->
+    <section class="chapter-section" id="ch3">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 3 of 12</span>
+          <span class="pill pill-green">Data</span>
+        </div>
+        <h2 class="chapter-title">3. Kind B: Data Services (.dbs)</h2>
+        <p class="lead">Exposing SQL Server and PostgreSQL databases directly as clean REST APIs without writing backend server code.</p>
+      </div>
+
+      <h3>What is a Data Service?</h3>
+      <p>A Data Service (<code>.dbs</code>) is an XML specification in MI that maps relational databases directly to RESTful endpoints or SOAP services. MI manages connection pooling, SQL execution, parameter binding, and JSON serialization automatically.</p>
+
+      <h3>1. Data Source Configuration</h3>
+      <p>Configuring a connection to Microsoft SQL Server or PostgreSQL:</p>
+      <div class="code-header"><span>PhoneBook.dbs (Data Source)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code>&lt;data name="PhoneBook" serviceGroup="" serviceNamespace=""&gt;
+   &lt;config id="PhoneBookParsDS"&gt;
+      &lt;property name="driverClassName"&gt;com.microsoft.sqlserver.jdbc.SQLServerDriver&lt;/property&gt;
+      &lt;property name="url"&gt;jdbc:sqlserver://172.27.25.140:1433;databaseName=PhoneBookPars;encrypt=false;trustServerCertificate=true&lt;/property&gt;
+      &lt;property name="username"&gt;mi_user&lt;/property&gt;
+      &lt;property name="password"&gt;SecretPass123&lt;/property&gt;
+   &lt;/config&gt;
+&lt;/data&gt;</code></pre>
+
+      <div class="callout danger">
+        <div class="callout-title">🚨 JDBC 13 Default Encryption Trap</div>
+        <p>Microsoft JDBC driver version 13 enables encryption by default. If your lab SQL Server does not have a trusted TLS certificate, connection test will fail immediately unless you append: <br>
+        <code>encrypt=false;trustServerCertificate=true</code></p>
+      </div>
+
+      <h3>2. Queries &amp; Resource Mapping</h3>
+      <p>You map a SQL query to an output structure, and then bind that query to a REST resource:</p>
+      <div class="code-header"><span>Query &amp; Resource Definition</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code>&lt;!-- Define Query --&gt;
+&lt;query id="GetPhonesQuery" useConfig="PhoneBookParsDS"&gt;
+   &lt;sql&gt;SELECT ContactId, FullName, PhoneNumber FROM dbo.Contacts&lt;/sql&gt;
+   &lt;result outputType="json"&gt;
+      {
+        "PhoneNumbers": {
+          "Person": [
+            {
+              "Id": "$ContactId",
+              "Name": "$FullName",
+              "Phone": "$PhoneNumber"
+            }
+          ]
+        }
+      }
+   &lt;/result&gt;
+&lt;/query&gt;
+
+&lt;!-- Expose as REST Resource --&gt;
+&lt;resource method="GET" path="phones"&gt;
+   &lt;call-query href="GetPhonesQuery" /&gt;
+&lt;/resource&gt;</code></pre>
+
+      <h3>The Automatic URL Rule for Data Services</h3>
+      <p>Data services in MI do not have arbitrary base paths. MI exposes them according to this mandatory URL structure:</p>
+      <pre><code>http://&lt;mi-host&gt;:8290/services/&lt;ServiceName&gt;.HTTPEndpoint/&lt;ResourcePath&gt;
+
+# Example:
+http://wso-mi-1:8290/services/phonebook.HTTPEndpoint/phones</code></pre>
+    </section>
+
+    <!-- CHAPTER 4 -->
+    <section class="chapter-section" id="ch4">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 4 of 12</span>
+          <span class="pill pill-green">EIP</span>
+        </div>
+        <h2 class="chapter-title">4. Mediators &amp; Transformation (EIP)</h2>
+        <p class="lead">Mastering the essential Synapse mediators to transform, filter, enrich, and route messages.</p>
+      </div>
+
+      <h3>The Essential Mediators</h3>
+      <p>In WSO2 MI, mediators are the verbs of your integration pipelines. Here are the 5 mediators you will use 90% of the time:</p>
+
+      <h4>1. Property Mediator (Variables &amp; Headers)</h4>
+      <p>Used to read, set, or remove properties from the Synapse message context or HTTP transport headers.</p>
+      <pre><code>&lt;!-- Save query parameter 'customerId' into a Synapse variable --&gt;
+&lt;property name="targetId" expression="$url:customerId" scope="default" /&gt;
+
+&lt;!-- Set an outgoing HTTP header --&gt;
+&lt;property name="X-Source-System" value="PARS-MI" scope="transport" /&gt;</code></pre>
+
+      <h4>2. PayloadFactory Mediator (Constructing Payloads)</h4>
+      <p>Builds a new JSON or XML payload using template placeholders and JSONPath/XPath arguments:</p>
+      <pre><code>&lt;payloadFactory media-type="json"&gt;
+    &lt;format&gt;
+        {
+            "status": "PROCESSED",
+            "reference": "$1",
+            "account": {
+                "id": "$2",
+                "type": "SAVINGS"
+            }
+        }
+    &lt;/format&gt;
+    &lt;args&gt;
+        &lt;arg evaluator="xml" expression="$ctx:refNumber"/&gt;
+        &lt;arg evaluator="json" expression="$.customer.accountId"/&gt;
+    &lt;/args&gt;
+&lt;/payloadFactory&gt;</code></pre>
+
+      <h4>3. Filter &amp; Switch Mediators (Branching)</h4>
+      <p>Conditional execution based on headers, query parameters, or payload content:</p>
+      <pre><code>&lt;filter source="get-property('transport', 'Accept')" regex=".*application/xml.*"&gt;
+    &lt;then&gt;
+        &lt;property name="messageType" value="application/xml" scope="axis2"/&gt;
+    &lt;/then&gt;
+    &lt;else&gt;
+        &lt;property name="messageType" value="application/json" scope="axis2"/&gt;
+    &lt;/else&gt;
+&lt;/filter&gt;</code></pre>
+
+      <h4>4. Call vs. Respond</h4>
+      <ul>
+        <li><code>&lt;call&gt;</code>: Invokes an external endpoint synchronously and pauses sequence execution until the response returns, then continues to the next mediator.</li>
+        <li><code>&lt;respond&gt;</code>: Halts mediation immediately and sends the current message payload back to the client.</li>
+      </ul>
+
+      <h4>5. Fault Sequence (Error Handling)</h4>
+      <p>Catches backend timeouts or exceptions, returning friendly JSON error structures:</p>
+      <pre><code>&lt;faultSequence&gt;
+    &lt;property name="HTTP_SC" value="502" scope="axis2"/&gt;
+    &lt;payloadFactory media-type="json"&gt;
+        &lt;format&gt;
+            {"error": "Backend Service Unavailable", "detail": "$1"}
+        &lt;/format&gt;
+        &lt;args&gt;
+            &lt;arg evaluator="xml" expression="$ctx:ERROR_MESSAGE"/&gt;
+        &lt;/args&gt;
+    &lt;/payloadFactory&gt;
+    &lt;respond/&gt;
+&lt;/faultSequence&gt;</code></pre>
+    </section>
+
+    <!-- CHAPTER 5 -->
+    <section class="chapter-section" id="ch5">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 5 of 12</span>
+          <span class="pill pill-green">Packaging</span>
+        </div>
+        <h2 class="chapter-title">5. Packaging &amp; Deployment: The CAR Rule</h2>
+        <p class="lead">Understanding Composite Applications, hot-deployment, and avoiding the FAT vs. Thin CAR dependency trap.</p>
+      </div>
+
+      <h3>What is a Carbon Application (.car)?</h3>
+      <p>WSO2 packages integrations into a <code>.car</code> (Composite Application) file. It is a ZIP file containing artifacts, XML metadata, and an <code>artifacts.xml</code> manifest.</p>
+
+      <div class="callout danger">
+        <div class="callout-title">🚨 The Golden Law: Never ZIP in Windows Explorer</div>
+        <p>Do <strong>not</strong> use <code>Compress-Archive</code> or right-click "Send to Compressed ZIP" and rename the extension to <code>.car</code>! MI will fail to extract the archive and throw <code>Error while extracting</code>. Always use the VS Code <strong>Export</strong> feature or Maven build.</p>
+      </div>
+
+      <h3>The FAT CAR vs. Thin CAR Rule</h3>
+      <p>When you create an integration that uses connectors (like <code>mi-connector-http</code>):</p>
+      <div class="card">
+        <h4>Thin CAR (Default)</h4>
+        <p>The exported <code>.car</code> contains only your project XML. It assumes all connectors are already installed on the MI server. If the server does not have them, deployment fails with:</p>
+        <code>Some dependencies were not satisfied in cApp:PhoneBook_1.0.0</code>
+        <p>Result: The service is <strong>not deployed</strong>. Calls return <strong>404 Not Found</strong>.</p>
+      </div>
+
+      <div class="card">
+        <h4>FAT CAR (Required Solution)</h4>
+        <p>A FAT CAR bundles the connector ZIPs directly inside the <code>.car</code> package, making it 100% self-contained.</p>
+        <p><strong>How to enable FAT CAR:</strong></p>
+        <ol>
+          <li>In VS Code, open <strong>Project Overview</strong> → <strong>Build Details</strong>.</li>
+          <li>Check <strong>Enable FAT CAR</strong> (or set <code>&lt;fat.car.enable&gt;true&lt;/fat.car.enable&gt;</code> in <code>pom.xml</code>).</li>
+          <li>Click <strong>Export</strong> again.</li>
+        </ol>
+      </div>
+
+      <h3>Deployment Lifecycle</h3>
+      <p>To deploy on your server (e.g. <code>wso-mi-1</code>):</p>
+      <ol>
+        <li>Copy the <code>.car</code> file to: <br><code>/opt/wso2/wso2mi-4.5.0/repository/deployment/server/carbonapps/</code></li>
+        <li>Ensure the file is owned by the <code>wso2</code> user: <br><code>sudo chown wso2:wso2 PhoneBook_1.0.0.car</code></li>
+        <li>Monitor the log: <br><code>sudo tail -f /opt/wso2/wso2mi-4.5.0/repository/logs/wso2carbon.log</code></li>
+        <li>Verify you see: <br><code>Successfully Deployed Carbon Application : PhoneBook_1.0.0</code></li>
+      </ol>
+    </section>
+
+    <!-- CHAPTER 6 -->
+    <section class="chapter-section" id="ch6">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 6 of 12</span>
+          <span class="pill pill-green">Catalog</span>
+        </div>
+        <h2 class="chapter-title">6. The Bridge: Service Catalog</h2>
+        <p class="lead">Connecting MI to APIM: How integration services register themselves automatically into Publisher.</p>
+      </div>
+
+      <h3>Why Service Catalog?</h3>
+      <p>Historically, connecting an ESB to an API Manager required manually exporting a WSDL or Swagger file and re-importing it into Publisher. WSO2's <strong>Service Catalog</strong> automates this completely.</p>
+
+      <h3>How It Works</h3>
+      <ol>
+        <li>When MI boots or a CAR is deployed, MI reads its deployed services and generates OpenAPI metadata.</li>
+        <li>If Service Catalog is enabled in MI's <code>deployment.toml</code>, MI makes a secure HTTPS call to APIM Publisher (<code>https://publisher.parspc.ir</code>).</li>
+        <li>APIM registers the service under <strong>Publisher → Services</strong>.</li>
+        <li>The API developer simply clicks <strong>Create API</strong> from that listed service!</li>
+      </ol>
+
+      <h3>MI Configuration (deployment.toml)</h3>
+      <div class="code-header"><span>MI conf/deployment.toml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code>[[service_catalog]]
+apim_host = "https://publisher.parspc.ir"
+enable = true
+username = "admin"
+password = "$secret{admin_password}"</code></pre>
+
+      <div class="callout warn">
+        <div class="callout-title">⚠️ The PKIX Trust Rule</div>
+        <p>Because MI calls APIM over HTTPS, APIM's public TLS certificate (or CA) <strong>must</strong> be imported into MI's <code>client-truststore.jks</code>. If you forget this, MI will fail to register services with a <code>PKIX path building failed: SunCertPathBuilderException</code>.</p>
+      </div>
+    </section>
+
+    <!-- CHAPTER 7 -->
+    <section class="chapter-section" id="ch7">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 7 of 12</span>
+          <span class="pill pill-green">APIM</span>
+        </div>
+        <h2 class="chapter-title">7. APIM Publisher: Designing APIs</h2>
+        <p class="lead">Creating, configuring resources, and applying governance policies in the Publisher portal.</p>
+      </div>
+
+      <h3>Publisher Overview</h3>
+      <p>The <strong>Publisher Portal</strong> (<code>https://publisher.parspc.ir/publisher</code>) is where API designers shape how the outside world interacts with your internal services.</p>
+
+      <h3>Creating an API: Two Approaches</h3>
+      <ul>
+        <li><strong>From Service Catalog (Kind B)</strong>: Go to <strong>Services</strong>, find <code>phonebook</code>, and click <strong>Create API</strong>. Context and basic resources are pre-populated.</li>
+        <li><strong>Design New REST API (Kind A)</strong>: Click <strong>Create API → Design a New REST API</strong>. Provide:
+          <ul>
+            <li><strong>Name</strong>: <code>PhoneBook</code></li>
+            <li><strong>Context</strong>: <code>/phonebook</code> (The public URL prefix)</li>
+            <li><strong>Version</strong>: <code>1.0.0</code></li>
+            <li><strong>Endpoint</strong>: The target backend address</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Configuring Resources (Paths &amp; Operations)</h3>
+      <p>Under <strong>API Configurations → Resources</strong>, define what HTTP methods and paths clients can call:</p>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Resource Path</th><th>Operation Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GET</code></td><td><code>/phones</code></td><td>Retrieve list of all phone contacts</td></tr>
+          <tr><td><code>GET</code></td><td><code>/phones/{id}</code></td><td>Retrieve contact by specific ID</td></tr>
+          <tr><td><code>POST</code></td><td><code>/phones</code></td><td>Create a new contact</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Attaching Policies (Mediation in APIM)</h3>
+      <p>Under <strong>API Configurations → Policies</strong>, you can drag-and-drop runtime policies to request, response, or fault flows without modifying your backend code:</p>
+      <ul>
+        <li><strong>Header Manipulation</strong>: Add, remove, or modify HTTP headers.</li>
+        <li><strong>CORS</strong>: Enable cross-origin resource sharing for web clients.</li>
+        <li><strong>IP Filtering</strong>: Allow or deny traffic based on client IP.</li>
+        <li><strong>Schema Validation</strong>: Validate client payloads against OpenAPI definitions before reaching the backend.</li>
+      </ul>
+    </section>
+
+    <!-- CHAPTER 8 -->
+    <section class="chapter-section" id="ch8">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 8 of 12</span>
+          <span class="pill pill-green">Trap</span>
+        </div>
+        <h2 class="chapter-title">8. The Endpoint Rule (Avoiding EPR 500)</h2>
+        <p class="lead">The most common failure in WSO2 APIM: Why URLs get doubled and how to compose endpoint bases correctly.</p>
+      </div>
+
+      <h3>The Anatomy of an Invocation URL</h3>
+      <p>When a client calls an API through WSO2 APIM Gateway, three distinct URL fragments are involved:</p>
+
+      <table>
+        <thead>
+          <tr><th>Fragment</th><th>Where It Is Configured</th><th>Example Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>A. Public Gateway URL</strong></td><td>Gateway domain + API Context + Version</td><td><code>https://api.parspc.ir/phonebook/1.0.0</code></td></tr>
+          <tr><td><strong>B. Backend Endpoint Base</strong></td><td>Publisher → <strong>Endpoints</strong></td><td><code>http://wso-mi-1:8290/services/phonebook.HTTPEndpoint</code></td></tr>
+          <tr><td><strong>C. Resource Path</strong></td><td>Publisher → <strong>Resources</strong></td><td><code>/phones</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>The Golden Formula</h3>
+      <p>What APIM actually calls on your backend is <strong>always</strong>:</p>
+      <pre><code>Actual Backend Request = [B. Endpoint Base] + [C. Resource Path]</code></pre>
+
+      <div class="callout danger">
+        <div class="callout-title">🚨 The Doubled Path Trap (EPR 500)</div>
+        <p>If you copy the full test URL from your browser or curl into Publisher's <strong>Endpoints</strong> box:</p>
+        <ul>
+          <li>Endpoint Base (B) = <code>http://wso-mi-1:8290/services/phonebook.HTTPEndpoint/phones</code></li>
+          <li>Resource Path (C) = <code>/phones</code></li>
+          <li><strong>Resulting Backend Request</strong> = <code>.../phonebook.HTTPEndpoint/phones/phones</code> ❌</li>
+        </ul>
+        <p>MI does not have a resource named <code>/phones/phones</code>. It throws an Axis2 error: <strong>"The endpoint reference (EPR) for the Operation not found"</strong> and returns HTTP 500!</p>
+      </div>
+
+      <h3>Interactive URL Calculator</h3>
+      <p>Try typing in the boxes below to see how APIM builds the final URL and detect doubled paths in real time:</p>
+      
+      <div class="calculator-box">
+        <div class="calc-row">
+          <span class="calc-label">Endpoint Base (B):</span>
+          <input type="text" class="calc-input" id="calc-b" value="http://wso-mi-1:8290/services/phonebook.HTTPEndpoint" oninput="updateUrlCalc()" />
+        </div>
+        <div class="calc-row">
+          <span class="calc-label">Resource Path (C):</span>
+          <input type="text" class="calc-input" id="calc-c" value="/phones" oninput="updateUrlCalc()" />
+        </div>
+        <div class="calc-result">
+          <div class="calc-result-title">Computed Call to Backend:</div>
+          <div class="calc-val" id="calc-out">http://wso-mi-1:8290/services/phonebook.HTTPEndpoint/phones</div>
+          <div id="calc-status" style="margin-top: 0.5rem; font-size: 0.85rem; font-weight: bold;"><span class="badge-ok">✅ Clean Path!</span> Backend endpoint will resolve correctly.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 9 -->
+    <section class="chapter-section" id="ch9">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 9 of 12</span>
+          <span class="pill pill-green">APIM</span>
+        </div>
+        <h2 class="chapter-title">9. Lifecycle &amp; Deployment: Deploy ≠ Publish</h2>
+        <p class="lead">The critical difference between deploying a revision to the Gateway and publishing an API to the Devportal.</p>
+      </div>
+
+      <h3>The Golden Law: Deploy ≠ Publish</h3>
+      <p>New API developers frequently get stuck because their API returns <strong>404 Not Found</strong> even after clicking "Deploy". Remember:</p>
+      <div class="card">
+        <h4>Deployments (Gateway Runtime)</h4>
+        <p>Creates a snapshot <strong>Revision</strong> of your configuration and deploys it to the Gateway nodes. The Gateway now knows the routes, but the API is <em>not yet accessible to subscribers</em>.</p>
+      </div>
+      <div class="card">
+        <h4>Lifecycle (Devportal Visibility &amp; Governance)</h4>
+        <p>Changes the API state from <strong>CREATED</strong> to <strong>PUBLISHED</strong>. This makes the API discoverable in the Developer Portal so applications can subscribe and generate tokens.</p>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-title">⚠️ You Must Do Both!</div>
+        <p>An API that is <strong>CREATED</strong> (even if deployed) will return Gateway <strong>404 Not Found</strong>. <br>
+        An API must be in the <strong>PUBLISHED</strong> state with an active revision deployed.</p>
+      </div>
+
+      <h3>Subscription Business Plans Requirement</h3>
+      <p>Before APIM allows you to publish an API, you <strong>must</strong> attach at least one <strong>Business Plan / Tier</strong> under <strong>Subscriptions</strong> (e.g., <em>Unlimited</em>, <em>Gold</em>, or <em>Silver</em>). If no tier is selected, the Publish button will remain disabled!</p>
+
+      <h3>The API Lifecycle Stages</h3>
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>Meaning</th><th>Can Gateway Invoke?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>CREATED</strong></td><td>Draft design in progress.</td><td>No (Returns 404)</td></tr>
+          <tr><td><strong>PROTOTYPED</strong></td><td>Mocked responses for early testing.</td><td>Yes (Sandbox keys only)</td></tr>
+          <tr><td><strong>PUBLISHED</strong></td><td>Live production API. Visible in Devportal.</td><td><strong>Yes (Full access)</strong></td></tr>
+          <tr><td><strong>BLOCKED</strong></td><td>Temporarily disabled for maintenance.</td><td>No (Returns 503)</td></tr>
+          <tr><td><strong>DEPRECATED</strong></td><td>Still works, but warning consumers to migrate.</td><td>Yes (Existing subscribers only)</td></tr>
+          <tr><td><strong>RETIRED</strong></td><td>Decommissioned permanently.</td><td>No (Returns 404)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- CHAPTER 10 -->
+    <section class="chapter-section" id="ch10">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 10 of 12</span>
+          <span class="pill pill-green">Devportal</span>
+        </div>
+        <h2 class="chapter-title">10. Devportal: Subscriptions &amp; Keys</h2>
+        <p class="lead">How application developers discover APIs, manage applications, and generate OAuth2 Bearer tokens.</p>
+      </div>
+
+      <h3>The Consumer Journey</h3>
+      <p>The <strong>Developer Portal</strong> (<code>https://devportal.parspc.ir/devportal</code>) is the storefront for your APIs. Consumers follow four straightforward steps:</p>
+
+      <ol>
+        <li><strong>Discover</strong>: Browse published APIs and inspect their documentation, schemas, and endpoints.</li>
+        <li><strong>Create an Application</strong>: Set up a logical container for your client project.</li>
+        <li><strong>Subscribe</strong>: Tie your Application to the desired API with a throttling tier (e.g. Unlimited).</li>
+        <li><strong>Generate Keys</strong>: Obtain OAuth2 credentials (Client ID &amp; Secret) and Access Tokens.</li>
+      </ol>
+
+      <h3>Why Use "Applications"?</h3>
+      <p>In WSO2, client credentials are <em>never</em> tied directly to individual user accounts. Instead, they are tied to <strong>Applications</strong>. This provides:</p>
+      <ul>
+        <li><strong>Decoupling</strong>: One application can subscribe to 10 different APIs using a single access token.</li>
+        <li><strong>Key Separation</strong>: Independent keys for <strong>Production</strong> vs. <strong>Sandbox</strong> environments.</li>
+        <li><strong>Traffic Throttling</strong>: Enforcing rate limits at the consumer application level.</li>
+      </ul>
+
+      <h3>Generating Keys &amp; Tokens</h3>
+      <p>Under your Application → <strong>Production Keys</strong>:</p>
+      <ol>
+        <li>Click <strong>Generate Keys</strong>. APIM assigns a <code>Consumer Key</code> and <code>Consumer Secret</code>.</li>
+        <li>Click <strong>Generate Token</strong>. Choose expiration time and scopes.</li>
+        <li>Copy the Bearer token: <br>
+          <code>eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...</code>
+        </li>
+      </ol>
+    </section>
+
+    <!-- CHAPTER 11 -->
+    <section class="chapter-section" id="ch11">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 11 of 12</span>
+          <span class="pill pill-green">Triage</span>
+        </div>
+        <h2 class="chapter-title">11. Invocation &amp; Diagnostics (Status Codes)</h2>
+        <p class="lead">Diagnose and resolve Gateway errors instantly using the status code triage matrix.</p>
+      </div>
+
+      <h3>Invoking the Gateway with cURL</h3>
+      <p>Always test your published API using the Gateway URL and your Bearer token:</p>
+
+      <div class="code-header"><span>Terminal (cURL)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code># 1. Without Token (Expect 401 Unauthorized)
+curl -vk https://api.parspc.ir/phonebook/1.0.0/phones
+
+# 2. With Bearer Token (Expect 200 OK + JSON Payload)
+curl -vk -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+     https://api.parspc.ir/phonebook/1.0.0/phones</code></pre>
+
+      <h3>Interactive Status Code Inspector</h3>
+      <p>Click any HTTP status code below to diagnose its exact cause and immediate fix:</p>
+
+      <div class="status-grid">
+        <div class="status-btn active" onclick="showStatus(200)"><div class="status-code badge-ok">200</div><div class="status-title">OK</div></div>
+        <div class="status-btn" onclick="showStatus(401)"><div class="status-code" style="color:var(--yellow)">401</div><div class="status-title">Unauthorized</div></div>
+        <div class="status-btn" onclick="showStatus(403)"><div class="status-code" style="color:var(--yellow)">403</div><div class="status-title">Forbidden</div></div>
+        <div class="status-btn" onclick="showStatus(404)"><div class="status-code badge-bad">404</div><div class="status-title">Not Found</div></div>
+        <div class="status-btn" onclick="showStatus(500)"><div class="status-code badge-bad">500</div><div class="status-title">EPR / Server Error</div></div>
+      </div>
+
+      <div class="status-detail-panel" id="status-panel">
+        <h4 style="margin:0 0 0.4rem; color:var(--text); font-size:1.05rem;">
+          <span class="badge-ok">200</span> 200 OK — Success!
+        </h4>
+        <p style="margin:0; font-size:0.9rem; line-height:1.5;">
+          Everything worked end-to-end. The Gateway authenticated your Bearer token, checked subscription limits, routed to the backend, and returned the response payload.
+        </p>
+      </div>
+    </section>
+
+    <!-- CHAPTER 12 -->
+    <section class="chapter-section" id="ch12">
+      <div class="chapter-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Module 12 of 12</span>
+          <span class="pill pill-green">Quiz</span>
+        </div>
+        <h2 class="chapter-title">12. Knowledge Check &amp; Practice Labs</h2>
+        <p class="lead">Test your understanding with real-world scenarios and review hands-on practice projects.</p>
+      </div>
+
+      <h3>Interactive Knowledge Check</h3>
+      <p>Answer these questions based on what you have learned:</p>
+
+      <div class="quiz-card" id="quiz-1">
+        <div class="quiz-q">1. Your API curl returns: <br><code>404 The requested resource is not available</code>. What is the most likely cause?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQuiz(1, 0, false)">A. You forgot to pass the Authorization: Bearer token.</button>
+          <button class="quiz-opt" onclick="checkQuiz(1, 1, true)">B. The API was created and deployed, but its Lifecycle was never set to PUBLISHED.</button>
+          <button class="quiz-opt" onclick="checkQuiz(1, 2, false)">C. MI threw a database timeout.</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-fb-1"></div>
+      </div>
+
+      <div class="quiz-card" id="quiz-2">
+        <div class="quiz-q">2. When you invoke <code>https://api.parspc.ir/phonebook/1.0.0/phones</code>, the gateway returns 500 and MI logs show <code>EPR for the Operation not found [/services/phonebook.HTTPEndpoint/phones/phones]</code>. How do you fix it?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQuiz(2, 0, false)">A. Re-export the CAR file as a Thin CAR.</button>
+          <button class="quiz-opt" onclick="checkQuiz(2, 1, false)">B. Add more memory to the JVM.</button>
+          <button class="quiz-opt" onclick="checkQuiz(2, 2, true)">C. Change Publisher Endpoint Base to remove '/phones', then deploy a new revision.</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-fb-2"></div>
+      </div>
+
+      <div class="quiz-card" id="quiz-3">
+        <div class="quiz-q">3. What is the difference between a Thin CAR and a FAT CAR?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQuiz(3, 0, true)">A. A FAT CAR bundles required connector dependencies inside the .car file so the runtime doesn't throw 'dependencies not satisfied'.</button>
+          <button class="quiz-opt" onclick="checkQuiz(3, 1, false)">B. A Thin CAR cannot be exported from VS Code.</button>
+          <button class="quiz-opt" onclick="checkQuiz(3, 2, false)">C. A FAT CAR is made with Windows Explorer ZIP.</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-fb-3"></div>
+      </div>
+
+      <h3>Suggested Practice Labs</h3>
+      <table>
+        <thead><tr><th>Lab</th><th>Type</th><th>Challenge</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Lab 1: Kind A</strong></td><td>APIM Only</td><td>Import a public weather API (or JSONPlaceholder) into Publisher, publish, subscribe in Devportal, and invoke via cURL.</td></tr>
+          <tr><td><strong>Lab 2: Kind B</strong></td><td>MI + APIM</td><td>Connect to a local database, build a <code>.dbs</code> with <code>GET /items</code>, export as FAT CAR, push via Service Catalog, and invoke with a Bearer token.</td></tr>
+          <tr><td><strong>Lab 3: Transformation</strong></td><td>MI Mediators</td><td>Create an MI REST API that accepts <code>{"customerNumber": "123"}</code>, uses <code>PayloadFactory</code> to transform it into XML for a legacy backend, and formats the response back to JSON.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <script>
+    // Status Code Diagnostic Details
+    var statusData = {
+      200: {
+        title: "200 OK — Success!",
+        badge: "badge-ok",
+        desc: "Everything worked end-to-end. The Gateway authenticated your Bearer token, checked subscription limits, routed to the backend, and returned the response payload."
+      },
+      401: {
+        title: "401 Unauthorized — Authentication Failure",
+        badge: "badge-bad",
+        desc: "The API and route exist on the Gateway, but you either provided no <code>Authorization: Bearer &lt;token&gt;</code> header, or your token is expired or malformed. <br><strong>Fix:</strong> Go to Devportal → Applications → Keys → Generate Token, and include the header in your curl request."
+      },
+      403: {
+        title: "403 Forbidden — Subscription or Scope Denied",
+        badge: "badge-bad",
+        desc: "The token is valid, but the Application is either <strong>not subscribed</strong> to this API, or the token lacks the OAuth scope required by this specific resource. <br><strong>Fix:</strong> Check Devportal → Applications → Subscriptions to ensure the API is subscribed under an active tier."
+      },
+      404: {
+        title: "404 Not Found — Resource or Route Missing",
+        badge: "badge-bad",
+        desc: "Can happen for three distinct reasons:<br>1. <strong>API is in CREATED state:</strong> It was never moved to <strong>PUBLISHED</strong> in the Publisher Lifecycle.<br>2. <strong>URL typo:</strong> Context, version, or resource does not match swagger definition.<br>3. <strong>Root Path:</strong> Calling <code>http://publisher.parspc.ir/</code> directly without path <code>/publisher</code>."
+      },
+      500: {
+        title: "500 Internal Server Error / Axis2 EPR Not Found",
+        badge: "badge-bad",
+        desc: "The Gateway reached the backend, but the backend rejected the path or crashed.<br><strong>Most common cause:</strong> Doubled path (e.g. <code>.../phonebook.HTTPEndpoint/phones/phones</code>). <br><strong>Fix:</strong> Ensure Publisher Endpoint Base contains only the base service URL, and redeploy a new revision."
+      }
+    };
+
+    // Interactive Status Code Inspector
+    function showStatus(code) {
+      var p = document.getElementById("status-panel");
+      if (!p) return;
+      var data = statusData[code];
+      p.innerHTML = '<h4 style="margin:0 0 0.4rem; color:var(--text); font-size:1.05rem;">' +
+        '<span class="' + data.badge + '">' + code + '</span> ' + data.title + '</h4>' +
+        '<p style="margin:0; font-size:0.9rem; line-height:1.5;">' + data.desc + '</p>';
+
+      var buttons = document.querySelectorAll(".status-btn");
+      for (var i = 0; i < buttons.length; i++) {
+        var isMatch = buttons[i].innerText.indexOf(code.toString()) !== -1;
+        if (isMatch) {
+          buttons[i].classList.add("active");
+        } else {
+          buttons[i].classList.remove("active");
+        }
+      }
+    }
+
+    // Interactive URL Calculator
+    function updateUrlCalc() {
+      var bEl = document.getElementById("calc-b");
+      var cEl = document.getElementById("calc-c");
+      var b = bEl ? bEl.value.trim() : "";
+      var c = cEl ? cEl.value.trim() : "";
+      var out = document.getElementById("calc-out");
+      var status = document.getElementById("calc-status");
+      if (!out) return;
+
+      var combined = b + (c.indexOf("/") === 0 ? c : "/" + c);
+      out.innerText = combined;
+
+      var resourceSegment = c.replace(/^\//, "");
+      if (resourceSegment && combined.indexOf(resourceSegment + "/" + resourceSegment) !== -1) {
+        status.innerHTML = "<span class='badge-bad'>🚨 DANGER: Doubled Path Detected!</span> Axis2 will throw EPR 500 error.";
+      } else {
+        status.innerHTML = "<span class='badge-ok'>✅ Clean Path!</span> Backend endpoint will resolve correctly.";
+      }
+    }
+
+    // Interactive Quiz Evaluator
+    function checkQuiz(qNum, optIdx, isCorrect) {
+      var card = document.getElementById("quiz-" + qNum);
+      var buttons = card.querySelectorAll(".quiz-opt");
+      var fb = document.getElementById("quiz-fb-" + qNum);
+
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].disabled = true;
+        if (i === optIdx) {
+          buttons[i].classList.add(isCorrect ? "correct" : "wrong");
+        }
+      }
+
+      fb.style.display = "block";
+      if (isCorrect) {
+        fb.style.background = "rgba(63, 185, 80, 0.15)";
+        fb.style.color = "var(--green)";
+        fb.innerHTML = "✅ <strong>Correct!</strong> You nailed it.";
+      } else {
+        fb.style.background = "rgba(248, 81, 73, 0.15)";
+        fb.style.color = "var(--red)";
+        fb.innerHTML = "❌ <strong>Incorrect.</strong> Review the chapter material above to understand why.";
+      }
+    }
+
+    // Copy Code Helper
+    function copyCode(btn) {
+      var pre = btn.parentElement.nextElementSibling;
+      var text = pre.innerText;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.innerText = "Copied!";
+        setTimeout(function() { btn.innerText = "Copy"; }, 2000);
+      });
+    }
+
+    // Theme Toggle
+    document.getElementById("theme-btn").onclick = function() {
+      var current = document.documentElement.getAttribute("data-theme");
+      var next = current === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+    };
+
+    // Sidebar search filter
+    document.getElementById("nav-search").addEventListener("input", function(e) {
+      var q = e.target.value.toLowerCase();
+      var items = document.querySelectorAll(".nav-item");
+      for (var i = 0; i < items.length; i++) {
+        var text = items[i].innerText.toLowerCase();
+        items[i].style.display = text.indexOf(q) !== -1 ? "block" : "none";
+      }
+    });
+
+    // Reading progress & active link on scroll
+    window.addEventListener("scroll", function() {
+      var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      var scrolled = (winScroll / height) * 100;
+      var pBar = document.getElementById("progress-bar");
+      if (pBar) pBar.style.width = scrolled + "%";
+
+      var sections = document.querySelectorAll("section.chapter-section");
+      var links = document.querySelectorAll(".nav-link");
+      var current = "";
+
+      for (var i = 0; i < sections.length; i++) {
+        var sectionTop = sections[i].offsetTop - 120;
+        if (winScroll >= sectionTop) {
+          current = sections[i].getAttribute("id");
+        }
+      }
+
+      for (var j = 0; j < links.length; j++) {
+        var href = links[j].getAttribute("href").substring(1);
+        if (href === current) {
+          links[j].classList.add("active");
+        } else {
+          links[j].classList.remove("active");
+        }
+      }
+    });
+  </script>
+</body>
+</html>

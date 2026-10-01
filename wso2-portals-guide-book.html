@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Official Guide to WSO2 APIM 4.7 Portals — Architecture, Features &amp; Capabilities</title>
+  <style>
+    :root {
+      --bg: #0c1117;
+      --panel: #161f28;
+      --card: #1c2633;
+      --line: #2e3e50;
+      --line-bright: #445973;
+      --text: #eef3f8;
+      --muted: #95a7ba;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --green: #3fb950;
+      --yellow: #f0c14b;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --code-bg: #090d12;
+      --sidebar-width: 290px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f6f8fa;
+      --panel: #ffffff;
+      --card: #f0f3f6;
+      --line: #d0d7de;
+      --line-bright: #afb8c1;
+      --text: #1f2328;
+      --muted: #656d76;
+      --accent: #0969da;
+      --accent-hover: #218bff;
+      --green: #1a7f37;
+      --yellow: #9a6700;
+      --red: #cf222e;
+      --purple: #8250df;
+      --code-bg: #eaeef2;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Reading Progress Bar */
+    #progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 100;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--purple), var(--green));
+    }
+
+    /* Sidebar Navigation */
+    aside {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+    }
+    .sidebar-header {
+      padding: 1.2rem 1rem 0.8rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .sidebar-header h1 {
+      font-size: 1rem;
+      margin: 0 0 0.3rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .sidebar-header p {
+      margin: 0;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+    .search-box {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.45rem 0.65rem;
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem 0.5rem;
+      list-style: none;
+      margin: 0;
+    }
+    .nav-item { margin-bottom: 2px; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 0.45rem 0.65rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.84rem;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover {
+      background: var(--card);
+      color: var(--text);
+    }
+    .nav-link.active {
+      background: var(--card);
+      color: var(--accent);
+      font-weight: 600;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+    }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      background: var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: monospace;
+    }
+
+    .sidebar-footer {
+      padding: 0.85rem 1rem;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    /* Main Content Area */
+    main {
+      flex: 1;
+      padding: 2.2rem 3rem 5rem;
+      max-width: 1000px;
+      overflow-y: visible;
+    }
+
+    section.book-section {
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 3.5rem;
+      margin-bottom: 3.5rem;
+    }
+    section.book-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 1rem;
+    }
+
+    .section-header { margin-bottom: 1.5rem; }
+    .doc-meta {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .pill-blue { background: rgba(88, 166, 255, 0.15); color: var(--accent); border: 1px solid rgba(88, 166, 255, 0.3); }
+    .pill-green { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid rgba(63, 185, 80, 0.3); }
+    .pill-yellow { background: rgba(240, 193, 75, 0.15); color: var(--yellow); border: 1px solid rgba(240, 193, 75, 0.3); }
+    .pill-purple { background: rgba(188, 140, 255, 0.15); color: var(--purple); border: 1px solid rgba(188, 140, 255, 0.3); }
+
+    h2.section-title {
+      font-size: 1.8rem;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+    p.lead {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      color: var(--accent);
+      margin: 2rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--line);
+    }
+    h4 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin: 1.4rem 0 0.5rem;
+    }
+    p, li {
+      color: var(--text);
+      line-height: 1.65;
+    }
+    ul, ol { padding-left: 1.4rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* Cards & Visual Grid */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .portal-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1.2rem;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .portal-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+    .portal-card h4 {
+      margin: 0 0 0.4rem;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .portal-path {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+      background: var(--card);
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
+      margin-bottom: 0.6rem;
+    }
+    .portal-desc {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin: 0;
+      flex: 1;
+    }
+
+    .feature-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1.1rem 1.3rem;
+      margin: 1rem 0;
+    }
+    .feature-card h4 { margin-top: 0; }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--card);
+      padding: 0.85rem 1.1rem;
+      margin: 1.2rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .callout.warn { border-left-color: var(--yellow); }
+    .callout.danger { border-left-color: var(--red); }
+    .callout.success { border-left-color: var(--green); }
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .callout.warn .callout-title { color: var(--yellow); }
+    .callout.danger .callout-title { color: var(--red); }
+    .callout.success .callout-title { color: var(--green); }
+
+    /* Code blocks */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace;
+      background: var(--card);
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+      color: var(--accent);
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.2rem 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+    }
+    th {
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+
+    /* Interactive Decision Wizard */
+    .wizard-box {
+      background: var(--panel);
+      border: 1px solid var(--line-bright);
+      border-radius: 10px;
+      padding: 1.4rem;
+      margin: 1.5rem 0;
+    }
+    .wizard-q {
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+    }
+    .wizard-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .wizard-btn {
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 0.5rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.15s ease;
+    }
+    .wizard-btn:hover, .wizard-btn.active {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent);
+    }
+    .wizard-answer {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      display: none;
+    }
+    .wizard-answer-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    @media (max-width: 860px) {
+      body { flex-direction: column; }
+      aside {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .nav-list { max-height: 200px; }
+      main { padding: 1.5rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-container"><div id="progress-bar"></div></div>
+
+  <!-- Left Sidebar Navigation -->
+  <aside>
+    <div class="sidebar-header">
+      <h1><span>🏛️</span> WSO2 Portals Bible</h1>
+      <p>Official Architecture, Menus &amp; Feature Reference (APIM 4.7)</p>
+    </div>
+
+    <!-- Companion Books Switcher inside Drawer -->
+    <div style="padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); background: rgba(88, 166, 255, 0.04);">
+      <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem;">Documentation Library</div>
+      <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+        <a href="index.html" style="color: var(--text); text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>📖 1. APIM 4.7 Cookbook</span><span>Cookbook</span></a>
+        <a href="wso2-portals-guide-book.html" style="background: rgba(88, 166, 255, 0.15); color: var(--accent); font-weight: 600; text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>📘 2. Portals Architecture Guide</span><span>Current</span></a>
+        <a href="working-with-wso2-book.html" style="color: var(--text); text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>📗 3. Field Manual (12 Ch)</span><span>Book</span></a>
+        <a href="architecture-flow-interactive.html" style="color: var(--text); text-decoration: none; font-size: 0.8rem; padding: 0.3rem 0.5rem; border-radius: 4px; display: flex; justify-content: space-between;"><span>⚡ 4. Architecture Simulator</span><span>Simulator</span></a>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="search" id="nav-search" placeholder="Search menus, features, policies..." />
+    </div>
+    <ul class="nav-list" id="chapter-list">
+      <li class="nav-item"><a class="nav-link active" href="#sec-overview"><span>1. The Portal Architecture</span><span class="nav-badge">Overview</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-publisher"><span>2. Publisher Portal</span><span class="nav-badge">/publisher</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-publisher-wizards"><span>3. API Creation Wizards</span><span class="nav-badge">Create</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-publisher-menus"><span>4. Publisher Inside Menus</span><span class="nav-badge">Studio</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-devportal"><span>5. Developer Portal</span><span class="nav-badge">/devportal</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-devportal-keys"><span>6. Applications &amp; Keys</span><span class="nav-badge">OAuth</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-devportal-console"><span>7. API Console (Try Out)</span><span class="nav-badge">Testing</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-admin"><span>8. Admin Portal</span><span class="nav-badge">/admin</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-throttling"><span>9. Throttling Engine</span><span class="nav-badge">Policies</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-carbon"><span>10. Carbon Console</span><span class="nav-badge">/carbon</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-gateway"><span>11. The Gateway Runtime</span><span class="nav-badge">Engine</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#sec-matrix"><span>12. Comparison Matrix &amp; Wizard</span><span class="nav-badge">Matrix</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <span>Official WSO2 4.7</span>
+      <button class="theme-toggle" id="theme-btn">🌓 Theme</button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main id="content-container">
+
+    <!-- Top Companion Books Switcher Bar -->
+    <nav style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.8rem; padding: 0.5rem 0.8rem; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+      <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-right: 0.3rem;">Library:</span>
+      <a href="index.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);">📖 APIM 4.7 Cookbook</a>
+      <a href="wso2-portals-guide-book.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; background: rgba(88, 166, 255, 0.15); border: 1px solid var(--accent); color: var(--accent); font-weight: 600; text-decoration: none;">📘 Portals Architecture Guide</a>
+      <a href="working-with-wso2-book.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);">📗 Field Manual (12 Ch)</a>
+      <a href="architecture-flow-interactive.html" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.82rem; color: var(--text); text-decoration: none; background: var(--card); border: 1px solid var(--line);">⚡ Architecture Simulator</a>
+    </nav>
+
+    <!-- SECTION 1: THE PORTAL ARCHITECTURE -->
+    <section class="book-section" id="sec-overview">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Architecture</span>
+          <span class="pill pill-green">Official WSO2 4.7</span>
+        </div>
+        <h2 class="section-title">1. The 4-Portal Architecture &amp; The Gateway</h2>
+        <p class="lead">WSO2 API Manager 4.7 decouples its platform into 4 specialized web portals plus a headless runtime engine.</p>
+      </div>
+
+      <p>Instead of a single monolithic user interface, WSO2 separates responsibilities based on enterprise security boundaries, persona roles, and runtime isolation. Understanding who uses which interface is the key to mastering the platform:</p>
+
+      <div class="portal-grid">
+        <div class="portal-card">
+          <h4><span>🎨</span> Publisher</h4>
+          <div class="portal-path">/publisher</div>
+          <p class="portal-desc"><strong>For API Creators &amp; Product Owners.</strong> Design APIs, define OpenAPI specs, configure backends, attach policies, and manage revisions &amp; lifecycle.</p>
+        </div>
+
+        <div class="portal-card">
+          <h4><span>🛍️</span> Devportal</h4>
+          <div class="portal-path">/devportal</div>
+          <p class="portal-desc"><strong>For API Consumers &amp; Developers.</strong> Self-service marketplace. Discover published APIs, create client Applications, subscribe, generate OAuth2 tokens, and test.</p>
+        </div>
+
+        <div class="portal-card">
+          <h4><span>⚖️</span> Admin Portal</h4>
+          <div class="portal-path">/admin</div>
+          <p class="portal-desc"><strong>For Operations &amp; Platform Governance.</strong> Define rate limiting tiers, configure third-party Key Managers (Okta, Keycloak), blacklist IPs, and approve workflows.</p>
+        </div>
+
+        <div class="portal-card">
+          <h4><span>⚙️</span> Carbon Console</h4>
+          <div class="portal-path">/carbon</div>
+          <p class="portal-desc"><strong>For Core Infrastructure Engineers.</strong> Legacy administration interface for direct LDAP/AD user stores, registry, and low-level Identity Server OAuth service providers.</p>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-title">⚠️ The Gateway Has NO Portal!</div>
+        <p>The <strong>Gateway</strong> (e.g. <code>https://api.parspc.ir</code> on port <code>8243</code>) is the high-performance runtime proxy. <strong>It has no web UI.</strong> Opening it in a browser returns an HTTP 404 JSON response. It only processes automated HTTP API requests bearing an <code>Authorization: Bearer &lt;token&gt;</code> header.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 2: PUBLISHER PORTAL -->
+    <section class="book-section" id="sec-publisher">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Portal Deep Dive</span>
+          <span class="pill pill-purple">API Creators</span>
+        </div>
+        <h2 class="section-title">2. Publisher Portal (`/publisher`)</h2>
+        <p class="lead">The creative and lifecycle management hub for designing and publishing digital APIs.</p>
+      </div>
+
+      <h3>Primary Capabilities</h3>
+      <ul>
+        <li><strong>API Design &amp; Prototyping</strong>: Visual editing of OpenAPI 3.0 specs, schemas, and mock responses.</li>
+        <li><strong>Security &amp; Policy Attachment</strong>: Attaching CORS, header transformations, schema validation, and OAuth scopes.</li>
+        <li><strong>Backend Endpoint Composition</strong>: Routing requests to HTTP REST, SOAP, AWS Lambda, Load Balanced, or Failover endpoints.</li>
+        <li><strong>Revision Deployment</strong>: Creating immutable snapshot revisions and promoting them across Gateway environments.</li>
+        <li><strong>Lifecycle Governance</strong>: Transitioning APIs through formal states (Created, Prototyped, Published, Deprecated, Retired).</li>
+      </ul>
+
+      <h3>Publisher Top Bar Navigation</h3>
+      <table>
+        <thead><tr><th>Top Menu</th><th>Official Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><strong>APIs</strong></td><td>The master catalog of all created APIs in the organization, showing state, context, and version.</td></tr>
+          <tr><td><strong>Services</strong></td><td>The <strong>Service Catalog</strong> view. Displays internal backend services automatically registered by WSO2 Micro Integrator (MI) or other runtimes. Click <em>Create API</em> directly from any service.</td></tr>
+          <tr><td><strong>API Products</strong></td><td>Enables combining fine-grained resources from multiple distinct APIs into a single commercial or unified product package with its own SLA.</td></tr>
+          <tr><td><strong>Policies</strong></td><td>The central <strong>Policy Hub</strong>. View, upload, and manage custom Java, Synapse, or OPA mediation policies reusable across APIs.</td></tr>
+          <tr><td><strong>Scopes</strong></td><td>Global OAuth2 scope registry. Define business permissions (e.g. <code>read:balance</code>, <code>write:transfer</code>) mapped to user roles.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 3: API CREATION WIZARDS -->
+    <section class="book-section" id="sec-publisher-wizards">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Publisher Feature</span>
+          <span class="pill pill-green">Creation Types</span>
+        </div>
+        <h2 class="section-title">3. Official API Creation Wizards</h2>
+        <p class="lead">WSO2 APIM 4.7 provides 6 distinct creation modalities depending on your backend protocol.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>1. Design a New REST API</h4>
+        <p><strong>When to use:</strong> You are starting from a blank slate or want to manually define paths, parameters, and endpoints inside APIM's visual editor.</p>
+        <p><strong>Required Fields:</strong> Name, Context (e.g., <code>/billing</code>), Version (e.g., <code>1.0.0</code>), Endpoint (target backend address), and Business Plan.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>2. Import OpenAPI / Swagger</h4>
+        <p><strong>When to use:</strong> You already have a standard OpenAPI 2.0 / 3.0 spec (JSON or YAML) from Swagger, FastAPI, Spring Boot, or Postman.</p>
+        <p><strong>Modes:</strong> Upload file or provide a public URL. APIM automatically generates all resources, data types, parameter validations, and documentation from the spec.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>3. Import SOAP / WSDL</h4>
+        <p><strong>When to use:</strong> Legacy enterprise backend integration. APIM gives two powerful modes:</p>
+        <ul>
+          <li><strong>Pass-through</strong>: APIM proxies raw SOAP XML envelopes over HTTP/HTTPS, adding rate limiting and OAuth2 security.</li>
+          <li><strong>Generate REST API (SOAP to REST)</strong>: APIM parses the WSDL operations and automatically generates RESTful JSON endpoints. Incoming JSON requests are converted to SOAP XML on the fly and sent to the legacy service, and XML responses are translated back to JSON!</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <h4>4. GraphQL API</h4>
+        <p><strong>When to use:</strong> Modern GraphQL backend. Upload your <code>.graphql</code> schema definition.</p>
+        <p><strong>Special Features:</strong> Field-level authorization, query complexity analysis, and query depth limiting to prevent malicious recursive queries from overloading your backend.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>5. Async / Streaming APIs</h4>
+        <p><strong>When to use:</strong> Event-driven architecture. Supports:</p>
+        <ul>
+          <li><strong>WebSocket</strong>: Full-duplex persistent connections.</li>
+          <li><strong>WebSub / Webhooks</strong>: Event notification topics where consumers register callback URLs.</li>
+          <li><strong>Server-Sent Events (SSE)</strong>: Unidirectional event streaming from backend to client.</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <h4>6. Create API from Service Catalog</h4>
+        <p><strong>When to use:</strong> Micro Integrator (MI) integration. MI pushes its deployed services via HTTPS into the catalog. Click <strong>Create API</strong> to immediately wrap the integration service with API management policies.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 4: PUBLISHER STUDIO MENUS -->
+    <section class="book-section" id="sec-publisher-menus">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Publisher Studio</span>
+          <span class="pill pill-yellow">Left Sidebar</span>
+        </div>
+        <h2 class="section-title">4. Deep Dive: Inside the API Studio</h2>
+        <p class="lead">A complete tour of the left sidebar menus when configuring an individual API.</p>
+      </div>
+
+      <table>
+        <thead><tr><th>Left Menu</th><th>What It Controls in WSO2 APIM</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Overview</strong></td>
+            <td>Dashboard showing active lifecycle status (CREATED, PUBLISHED), rating, public gateway URLs, tags, and quick actions.</td>
+          </tr>
+          <tr>
+            <td><strong>API Definition</strong></td>
+            <td>The embedded <strong>Swagger / OpenAPI 3.0 Editor</strong>. Edit raw YAML/JSON or use visual forms to add request body schemas, header definitions, and response codes.</td>
+          </tr>
+          <tr>
+            <td><strong>Endpoints</strong></td>
+            <td>
+              Defines where traffic is forwarded:
+              <br>• <strong>HTTP/REST Endpoint</strong>: Standard single backend URL.
+              <br>• <strong>Load-Balanced Endpoints</strong>: Multiple server URLs with Round Robin or Weighting.
+              <br>• <strong>Failover Endpoints</strong>: Primary server with automated failover to secondary servers on timeout.
+              <br>• <strong>AWS Lambda Endpoint</strong>: Direct invocation of serverless functions using AWS credentials.
+              <br>• <strong>Endpoint Security</strong>: Basic Auth, Digest Auth, or OAuth 2.0 Client Credentials flow to the backend.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Resources</strong></td>
+            <td>
+              HTTP operations tree (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, <code>PATCH</code>):
+              <br>• <strong>Operation Security</strong>: Toggle OAuth on/off per resource.
+              <br>• <strong>Resource Throttling</strong>: Apply specific rate limits to heavy resources (e.g. 5 req/min on <code>POST /transfer</code>).
+              <br>• <strong>OAuth Scopes</strong>: Restrict resources to specific scopes (e.g. <code>admin:write</code>).
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Policies (Mediation)</strong></td>
+            <td>
+              <strong>The Policy Hub</strong>: Drag-and-drop mediation pipeline. Three sequential execution flows:
+              <br>1. <strong>Request Flow</strong>: Add/remove headers, path rewriting, payload schema validation.
+              <br>2. <strong>Response Flow</strong>: Modify backend response headers, sanitize JSON data, CORS injection.
+              <br>3. <strong>Fault Flow</strong>: Custom error mapping when backend fails or times out.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Runtime Configurations</strong></td>
+            <td>Transport selection (HTTP/HTTPS), MTOM for binary attachments, and <strong>Response Caching</strong> (TTL in seconds).</td>
+          </tr>
+          <tr>
+            <td><strong>Subscriptions</strong></td>
+            <td>Select available <strong>Business Plans / Tiers</strong> (Unlimited, Gold, Silver). <em>Mandatory: You cannot publish an API without at least one plan selected.</em></td>
+          </tr>
+          <tr>
+            <td><strong>Deployments</strong></td>
+            <td>
+              <strong>Revision Management</strong>: APIM does not push live draft changes directly to the gateway.
+              <br>1. You create an immutable <strong>Revision</strong> (e.g. Revision 1).
+              <br>2. You deploy that revision to target Gateway environments.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Lifecycle</strong></td>
+            <td>
+              The official state machine:
+              <br>• <code>CREATED</code>: Draft. Gateway returns 404.
+              <br>• <code>PROTOTYPED</code>: Mock testing.
+              <br>• <code>PUBLISHED</code>: Live in Devportal. Gateway executes calls.
+              <br>• <code>BLOCKED</code>: Temporarily suspended. Gateway returns 503.
+              <br>• <code>DEPRECATED</code>: Sunset notice. Existing subscribers still work.
+              <br>• <code>RETIRED</code>: Permanently decommissioned.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Documents</strong></td>
+            <td>Documentation engine. Attach Markdown pages, PDF files, URLs, or inline help text for API consumers.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 5: DEVELOPER PORTAL -->
+    <section class="book-section" id="sec-devportal">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Portal Deep Dive</span>
+          <span class="pill pill-green">API Consumers</span>
+        </div>
+        <h2 class="section-title">5. Developer Portal (`/devportal`)</h2>
+        <p class="lead">The self-service API marketplace where application developers discover, subscribe, and obtain credentials.</p>
+      </div>
+
+      <h3>Core Concepts</h3>
+      <p>Devportal treats APIs as products in an online store. Consumers do not just call an API; they enter into a governed relationship with rate limits and credentials.</p>
+
+      <h3>Key Developer Portal Features</h3>
+      <ul>
+        <li><strong>API Catalog &amp; Smart Search</strong>: Search by tag, API name, context, documentation content, or provider.</li>
+        <li><strong>Interactive Swagger Console</strong>: Test endpoints directly inside the browser.</li>
+        <li><strong>Client SDK Generation</strong>: One-click export of ready-to-run client code in <strong>Java, Python, JavaScript, C#, PHP, Go, Ruby, and Android</strong>.</li>
+        <li><strong>Community &amp; Ratings</strong>: Five-star rating system, consumer feedback, and technical comments per API.</li>
+      </ul>
+    </section>
+
+    <!-- SECTION 6: APPLICATIONS & KEYS -->
+    <section class="book-section" id="sec-devportal-keys">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Devportal Core</span>
+          <span class="pill pill-yellow">OAuth2 Security</span>
+        </div>
+        <h2 class="section-title">6. Applications, Subscriptions &amp; Key Generation</h2>
+        <p class="lead">Why WSO2 uses "Applications" instead of user-level keys, and how token generation works.</p>
+      </div>
+
+      <h3>Why Does the "Application" Concept Exist?</h3>
+      <div class="card">
+        <p>In simple platforms, an API key is tied to a user account. In WSO2, client credentials belong to an <strong>Application</strong>. This architecture solves three critical enterprise problems:</p>
+        <ol>
+          <li><strong>Multi-API Bundling</strong>: One client application (e.g. <code>MobileBanking-App</code>) can subscribe to 10 different APIs (Account API, Transfer API, Loans API) and invoke all of them using a <strong>single OAuth2 token</strong>!</li>
+          <li><strong>Environment Isolation</strong>: An Application has separate <strong>Production Keys</strong> and <strong>Sandbox Keys</strong>. You can test in sandbox without risking production rate limits or data.</li>
+          <li><strong>Application Throttling</strong>: Protects the backend from consumer bugs. If one buggy mobile app loops endlessly, the Application rate limit cuts it off without affecting other applications.</li>
+        </ol>
+      </div>
+
+      <h3>Generating OAuth2 Keys in Devportal</h3>
+      <p>Inside <strong>Applications → [Your App] → Production Keys</strong>:</p>
+      <ol>
+        <li>Click <strong>Generate Keys</strong>. APIM assigns:
+          <ul>
+            <li><strong>Consumer Key (Client ID)</strong>: The public identifier for your app.</li>
+            <li><strong>Consumer Secret</strong>: The private secret key used to authenticate.</li>
+          </ul>
+        </li>
+        <li>Select <strong>Grant Types</strong> supported by your application:
+          <ul>
+            <li><code>Client Credentials</code>: Machine-to-machine background services.</li>
+            <li><code>Authorization Code</code>: Web applications with user redirection (PKCE supported).</li>
+            <li><code>Password</code>: Legacy direct username/password authentication.</li>
+            <li><code>Refresh Token</code>: Refreshing expired access tokens without re-authenticating.</li>
+          </ul>
+        </li>
+        <li>Click <strong>Generate Token</strong>: APIM issues a signed JWT Bearer token:
+          <pre><code>eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIs...</code></pre>
+        </li>
+      </ol>
+    </section>
+
+    <!-- SECTION 7: API CONSOLE (TRY OUT) -->
+    <section class="book-section" id="sec-devportal-console">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Devportal Feature</span>
+          <span class="pill pill-purple">API Console</span>
+        </div>
+        <h2 class="section-title">7. The API Console (Try Out Screen Demystified)</h2>
+        <p class="lead">Understanding the Try Out interface and why anonymous viewing causes confusion.</p>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-title">🚨 The "Anonymous View" Trap</div>
+        <p>When you open Devportal without logging in (it displays the <strong>SIGN-IN</strong> button in the top right):</p>
+        <ul>
+          <li>Devportal allows you to browse public APIs.</li>
+          <li>However, when you open the <strong>API Console (Try Out)</strong>, Devportal cannot generate an OAuth token for you because anonymous guests have no Application or Subscriptions!</li>
+          <li>Instead of showing a warning, it silently switches <strong>Security Type</strong> to <strong>Basic</strong> and prompts for a manual Username/Password.</li>
+          <li><strong>Fix:</strong> Always click <strong>SIGN-IN</strong> first! Once logged in, the Security Type switches to <strong>OAuth</strong>, lists your Applications, and auto-generates test tokens with one click.</li>
+        </ul>
+      </div>
+
+      <h3>How to Test Inside the API Console (Logged In)</h3>
+      <ol>
+        <li>Select <strong>Security Type: OAuth</strong>.</li>
+        <li>Select your subscribed <strong>Application</strong> from the dropdown.</li>
+        <li>Select key type: <strong>Production</strong>.</li>
+        <li>Click <strong>Get Test Token</strong> (injected automatically into the swagger header).</li>
+        <li>Expand any resource (e.g. <code>GET /phones</code>), click <strong>Try it out</strong>, and click <strong>Execute</strong>.</li>
+      </ol>
+    </section>
+
+    <!-- SECTION 8: ADMIN PORTAL -->
+    <section class="book-section" id="sec-admin">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Portal Deep Dive</span>
+          <span class="pill pill-yellow">Operations &amp; Governance</span>
+        </div>
+        <h2 class="section-title">8. Admin Portal (`/admin`)</h2>
+        <p class="lead">The operations console for platform administrators to enforce global governance, rate limiting, and security rules.</p>
+      </div>
+
+      <h3>Admin Portal Left Sidebar Menu</h3>
+      <table>
+        <thead><tr><th>Menu Item</th><th>Official Purpose</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Rate Limiting Policies</strong></td>
+            <td>The heart of APIM traffic shaping. Define subscription plans, application quotas, advanced IP/JWT filtering, and blacklisting rules.</td>
+          </tr>
+          <tr>
+            <td><strong>Key Managers</strong></td>
+            <td>Register third-party identity providers (IDPs). Connect **Okta, Keycloak, Microsoft Azure AD, PingFederate, or Auth0** so consumers can use external OAuth2 tokens on the WSO2 Gateway.</td>
+          </tr>
+          <tr>
+            <td><strong>Tasks (Workflows)</strong></td>
+            <td>Configure human approval workflows. Require manager approval before an API is Published or before an Application Subscription is granted.</td>
+          </tr>
+          <tr>
+            <td><strong>Gateways</strong></td>
+            <td>Manage Gateway runtime environments (e.g. Production Gateway cluster vs External Partner Gateway).</td>
+          </tr>
+          <tr>
+            <td><strong>Settings</strong></td>
+            <td>Global platform configuration: Analytics settings, scopes management, and tenant themes.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 9: THROTTLING ENGINE -->
+    <section class="book-section" id="sec-throttling">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Admin Engine</span>
+          <span class="pill pill-green">Traffic Shaping</span>
+        </div>
+        <h2 class="section-title">9. The Multi-Tier Throttling Engine</h2>
+        <p class="lead">WSO2 APIM features one of the most granular rate-limiting engines in the industry, evaluated at four distinct tiers.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>1. Subscription Policies (Commercial Plans)</h4>
+        <p>Enforced per consumer subscription to an API. Defines commercial tiers like:</p>
+        <ul>
+          <li><strong>Unlimited</strong>: No request caps.</li>
+          <li><strong>Gold</strong>: 5,000 requests per minute with burst limit of 200 req/sec.</li>
+          <li><strong>Silver</strong>: 500 requests per minute.</li>
+          <li><strong>Bronze</strong>: 50 requests per minute.</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <h4>2. Application Policies (Client Defense)</h4>
+        <p>Enforces a hard ceiling on the total requests an application can emit across <em>all</em> APIs combined. Protects internal infrastructure from buggy consumer client loops.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>3. Advanced Throttling (Dynamic Conditions)</h4>
+        <p>Define rules evaluated on runtime request attributes:</p>
+        <ul>
+          <li><strong>IP / IP Range</strong>: Limit a specific partner IP subnet to 10 req/min.</li>
+          <li><strong>HTTP Header</strong>: Throttle based on custom headers (e.g. <code>X-Customer-Tier: Free</code>).</li>
+          <li><strong>JWT Claims</strong>: Read claims inside the token (e.g. <code>department == "sales"</code>) and apply rate rules.</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <h4>4. Blacklisting (Deny Policies)</h4>
+        <p>Instantly block rogue traffic at the Gateway edge: Block by IP address, IP subnet range, Application name, User ID, or API context.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 10: CARBON CONSOLE -->
+    <section class="book-section" id="sec-carbon">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Portal Deep Dive</span>
+          <span class="pill pill-purple">Legacy Core</span>
+        </div>
+        <h2 class="section-title">10. Carbon Management Console (`/carbon`)</h2>
+        <p class="lead">The low-level OSGi runtime administration interface underneath the WSO2 suite.</p>
+      </div>
+
+      <p>The <strong>Carbon Console</strong> is the legacy underlying engine that powered earlier generations of WSO2 products. In modern <strong>APIM 4.x</strong>, almost all day-to-day functions have been migrated to the modern React-based Publisher, Devportal, and Admin portals.</p>
+
+      <h3>When Do You Still Use Carbon in APIM 4.7?</h3>
+      <ul>
+        <li><strong>User Store Management</strong>: Configuring secondary LDAP or Active Directory user stores.</li>
+        <li><strong>Registry Browser</strong>: Browsing low-level WSO2 Governance and Config registries.</li>
+        <li><strong>Service Providers</strong>: Configuring underlying SAML/OIDC Single Sign-On (SSO) service providers for the portals themselves.</li>
+      </ul>
+
+      <div class="callout danger">
+        <div class="callout-title">🚨 The Carbon Golden Rule</div>
+        <p><strong>Do not create or edit APIs in Carbon!</strong> Carbon is not an API catalog. Modifying API artifacts directly in the Carbon registry will desynchronize the API Manager database and break Publisher revisions.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 11: THE GATEWAY RUNTIME -->
+    <section class="book-section" id="sec-gateway">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Runtime Engine</span>
+          <span class="pill pill-green">Traffic Plane</span>
+        </div>
+        <h2 class="section-title">11. The Gateway Runtime (Headless Engine)</h2>
+        <p class="lead">How traffic executes through the Gateway at runtime without human intervention.</p>
+      </div>
+
+      <p>The <strong>Gateway</strong> is the only component that clients and mobile apps talk to in production. Here is its step-by-step millisecond execution pipeline:</p>
+
+      <pre><code>[Client Request]
+       │
+       ▼
+1. TLS Handshake &amp; Host Routing (api.parspc.ir :8243)
+       │
+       ▼
+2. Path Matching (Context + Version: /phonebook/1.0.0/phones)
+   └─► If API is in CREATED state or path is wrong: Returns 404 NOT FOUND
+       │
+       ▼
+3. Security Validation
+   ├─► Checks "Authorization: Bearer &lt;JWT&gt;"
+   ├─► Verifies digital signature with public certificate
+   ├─► Checks token expiration and OAuth scopes
+   └─► Missing or expired: Returns 401 UNAUTHORIZED
+       │
+       ▼
+4. Rate Limiting (Throttling) Evaluation
+   ├─► Checks Subscription tier quota (e.g. Unlimited)
+   ├─► Checks Application tier quota
+   ├─► Checks Blacklist &amp; IP rules
+   └─► Limit exceeded: Returns 429 TOO MANY REQUESTS
+       │
+       ▼
+5. Policy Execution (Request Flow)
+   └─► Injects headers, applies CORS, transforms JSON
+       │
+       ▼
+6. Backend Forwarding
+   └─► Calls Backend Endpoint Base + Resource Path
+       │
+       ▼
+7. Response Processing &amp; Return
+   └─► Injects response headers, checks cache, returns 200 OK to Client</code></pre>
+    </section>
+
+    <!-- SECTION 12: MATRIX & DECISION WIZARD -->
+    <section class="book-section" id="sec-matrix">
+      <div class="section-header">
+        <div class="doc-meta">
+          <span class="pill pill-blue">Cheat-Sheet</span>
+          <span class="pill pill-yellow">Interactive</span>
+        </div>
+        <h2 class="section-title">12. Portal Comparison &amp; Decision Guide</h2>
+        <p class="lead">Quick reference table and an interactive wizard to instantly find the right portal for any task.</p>
+      </div>
+
+      <h3>Portal Feature Comparison Matrix</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Task / Capability</th>
+            <th>Publisher</th>
+            <th>Devportal</th>
+            <th>Admin</th>
+            <th>Carbon</th>
+            <th>Gateway</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Create new REST API / Swagger</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td><td>❌</td><td>❌</td></tr>
+          <tr><td>Change Backend Endpoint URL</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td><td>❌</td><td>❌</td></tr>
+          <tr><td>Change API Lifecycle (Publish)</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td><td>❌</td><td>❌</td></tr>
+          <tr><td>Browse Published API Catalog</td><td>✅</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td><td>❌</td></tr>
+          <tr><td>Create Client Application</td><td>❌</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td><td>❌</td></tr>
+          <tr><td>Subscribe to an API</td><td>❌</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td><td>❌</td></tr>
+          <tr><td>Generate Client ID &amp; Token</td><td>❌</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td><td>❌</td></tr>
+          <tr><td>Create new Rate Limiting Tier</td><td>❌</td><td>❌</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td></tr>
+          <tr><td>Connect Okta / Keycloak</td><td>❌</td><td>❌</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td></tr>
+          <tr><td>Blacklist an abusive IP</td><td>❌</td><td>❌</td><td>✅ <strong>Yes</strong></td><td>❌</td><td>❌</td></tr>
+          <tr><td>Configure Active Directory LDAP</td><td>❌</td><td>❌</td><td>❌</td><td>✅ <strong>Yes</strong></td><td>❌</td></tr>
+          <tr><td>Accept &amp; Execute Live Traffic</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅ <strong>Yes</strong></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Interactive: "Which Portal Do I Need?"</h3>
+      <p>Select what you are trying to do right now:</p>
+
+      <div class="wizard-box">
+        <div class="wizard-q">I want to...</div>
+        <div class="wizard-options">
+          <button class="wizard-btn" onclick="showWizard(1)">Design, create, or publish an API</button>
+          <button class="wizard-btn" onclick="showWizard(2)">Get an access token or test an API</button>
+          <button class="wizard-btn" onclick="showWizard(3)">Create rate limit tiers or block an IP</button>
+          <button class="wizard-btn" onclick="showWizard(4)">Configure LDAP or deep user stores</button>
+          <button class="wizard-btn" onclick="showWizard(5)">Send real production curl / HTTP traffic</button>
+        </div>
+        <div class="wizard-answer" id="wizard-ans"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Theme Toggle
+    document.getElementById("theme-btn").onclick = function() {
+      var current = document.documentElement.getAttribute("data-theme");
+      var next = current === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+    };
+
+    // Sidebar search filter
+    document.getElementById("nav-search").addEventListener("input", function(e) {
+      var q = e.target.value.toLowerCase();
+      var items = document.querySelectorAll(".nav-item");
+      for (var i = 0; i < items.length; i++) {
+        var text = items[i].innerText.toLowerCase();
+        items[i].style.display = text.indexOf(q) !== -1 ? "block" : "none";
+      }
+    });
+
+    // Reading progress & active link on scroll
+    window.addEventListener("scroll", function() {
+      var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      var scrolled = (winScroll / height) * 100;
+      var pBar = document.getElementById("progress-bar");
+      if (pBar) pBar.style.width = scrolled + "%";
+
+      var sections = document.querySelectorAll("section.book-section");
+      var links = document.querySelectorAll(".nav-link");
+      var current = "";
+
+      for (var i = 0; i < sections.length; i++) {
+        var sectionTop = sections[i].offsetTop - 120;
+        if (winScroll >= sectionTop) {
+          current = sections[i].getAttribute("id");
+        }
+      }
+
+      for (var j = 0; j < links.length; j++) {
+        var href = links[j].getAttribute("href").substring(1);
+        if (href === current) {
+          links[j].classList.add("active");
+        } else {
+          links[j].classList.remove("active");
+        }
+      }
+    });
+
+    // Decision Wizard Logic
+    var wizardData = {
+      1: {
+        title: "🎨 You need: The Publisher Portal (/publisher)",
+        desc: "Go to <code>https://publisher.parspc.ir/publisher</code>. Log in as an API creator to design your OpenAPI specs, set backend endpoint URLs, attach business plans, deploy revisions, and click PUBLISH."
+      },
+      2: {
+        title: "🛍️ You need: The Developer Portal (/devportal)",
+        desc: "Go to <code>https://devportal.parspc.ir/devportal</code>. <strong>Remember to SIGN-IN first!</strong> Create an Application, subscribe to the API, click <em>Production Keys → Generate Token</em>, and use that Bearer token to test."
+      },
+      3: {
+        title: "⚖️ You need: The Admin Portal (/admin)",
+        desc: "Go to <code>https://admin.parspc.ir/admin</code>. Log in as an administrator to create Subscription/Application rate limiting policies, connect external Key Managers (Okta/Keycloak), or blacklist abusive IPs."
+      },
+      4: {
+        title: "⚙️ You need: The Carbon Management Console (/carbon)",
+        desc: "Go to <code>https://publisher.parspc.ir/carbon</code>. Used only for low-level server configuration: setting up secondary Active Directory/LDAP user stores and examining raw identity service providers."
+      },
+      5: {
+        title: "🚀 You need: The Gateway Runtime (NO PORTAL)",
+        desc: "The Gateway has no browser UI! It runs on <code>https://api.parspc.ir</code> (port 8243). Use cURL, Postman, or your backend client with an <code>Authorization: Bearer &lt;TOKEN&gt;</code> header to invoke live APIs."
+      }
+    };
+
+    function showWizard(choice) {
+      var ans = document.getElementById("wizard-ans");
+      var data = wizardData[choice];
+      ans.style.display = "block";
+      ans.innerHTML = '<div class="wizard-answer-title">' + data.title + '</div><p style="margin:0;font-size:0.92rem;line-height:1.5;">' + data.desc + '</p>';
+
+      var btns = document.querySelectorAll(".wizard-btn");
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle("active", i === (choice - 1));
+      }
+    }
+  </script>
+</body>
+</html>

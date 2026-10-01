@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0c1117" />
+  <title>WSO2 APIM 4.7 Portals &amp; Security Cookbook — Developer Manual &amp; Concepts</title>
+  <style>
+    :root {
+      --bg: #0c1117;
+      --panel: #161f28;
+      --card: #1c2633;
+      --card-hover: #222f3e;
+      --line: #2e3e50;
+      --line-bright: #445973;
+      --text: #eef3f8;
+      --muted: #95a7ba;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --green: #3fb950;
+      --yellow: #f0c14b;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --code-bg: #090d12;
+      --sidebar-width: 310px;
+      --topbar-height: 56px;
+      --font-scale: 100%;
+    }
+
+    [data-theme="light"] {
+      --bg: #f6f8fa;
+      --panel: #ffffff;
+      --card: #f0f3f6;
+      --card-hover: #e6ebf1;
+      --line: #d0d7de;
+      --line-bright: #afb8c1;
+      --text: #1f2328;
+      --muted: #656d76;
+      --accent: #0969da;
+      --accent-hover: #218bff;
+      --green: #1a7f37;
+      --yellow: #9a6700;
+      --red: #cf222e;
+      --purple: #8250df;
+      --code-bg: #eaeef2;
+    }
+
+    * { box-sizing: border-box; }
+    html {
+      scroll-behavior: smooth;
+      font-size: var(--font-scale);
+      -webkit-text-size-adjust: 100%;
+    }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Fixed top reading progress */
+    #progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 1000;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--purple), var(--green));
+      transition: width 0.08s ease;
+    }
+
+    /* Mobile Header App Bar */
+    .mobile-topbar {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--topbar-height);
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      z-index: 500;
+      padding: 0 0.85rem;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .mobile-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .hamburger-btn {
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .hamburger-btn:active {
+      background: var(--card-hover);
+    }
+    .mobile-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+    .mobile-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .icon-btn {
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 0.4rem 0.55rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-weight: 500;
+      touch-action: manipulation;
+    }
+
+    /* Mobile Backdrop */
+    .backdrop-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 600;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .backdrop-overlay.show {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Sidebar Navigation */
+    aside {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      z-index: 700;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar-header {
+      padding: 1.1rem 1.1rem 0.8rem;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    .sidebar-header h1 {
+      font-size: 1.05rem;
+      margin: 0 0 0.25rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .sidebar-header p {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .close-drawer-btn {
+      display: none;
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Search inside drawer */
+    .drawer-search {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .drawer-search input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.45rem 0.75rem;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .drawer-search input:focus {
+      border-color: var(--accent);
+    }
+
+    /* Guide Switcher Tabs inside Sidebar */
+    .companion-nav {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(88, 166, 255, 0.04);
+    }
+    .companion-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .companion-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .companion-links a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.8rem;
+      transition: background 0.15s;
+    }
+    .companion-links a:hover {
+      background: var(--card);
+    }
+    .companion-links a.active-book {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.8rem 0;
+      list-style: none;
+      margin: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .nav-group-title {
+      padding: 0.65rem 1.1rem 0.25rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .nav-links li a {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.42rem 1.1rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      border-left: 3px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .nav-links li a:hover {
+      color: var(--text);
+      background: rgba(88, 166, 255, 0.08);
+      border-left-color: var(--accent);
+    }
+    .nav-links li a.active {
+      color: var(--accent);
+      font-weight: 600;
+      background: rgba(88, 166, 255, 0.12);
+      border-left-color: var(--accent);
+    }
+
+    .sidebar-footer {
+      padding: 0.8rem 1rem;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      background: var(--panel);
+    }
+    .font-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .font-btn {
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      max-width: 1020px;
+      padding: 2.5rem 3.5rem 6rem;
+      margin: 0 auto;
+      width: 100%;
+      min-width: 0; /* Prevents overflow blowout */
+    }
+
+    /* Top Books Switcher Bar on Desktop */
+    .top-books-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      padding: 0.6rem 0.8rem;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    .top-books-bar span {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      margin-right: 0.3rem;
+    }
+    .book-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: var(--text);
+      text-decoration: none;
+      background: var(--card);
+      border: 1px solid var(--line);
+      transition: all 0.15s ease;
+    }
+    .book-pill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .book-pill.active {
+      background: rgba(88, 166, 255, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    h1, h2, h3, h4 { color: var(--text); font-weight: 600; margin-top: 2.2rem; margin-bottom: 0.8rem; }
+    h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0.6rem;
+      margin-top: 0;
+      line-height: 1.25;
+    }
+    h2 {
+      font-size: clamp(1.25rem, 2.5vw, 1.55rem);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0.4rem;
+      line-height: 1.35;
+    }
+    h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
+    h4 { font-size: 1.05rem; color: var(--accent); }
+
+    p, li { color: var(--text); font-size: 0.95rem; }
+    .muted { color: var(--muted); }
+
+    /* Overview Cards */
+    .overview-card {
+      background: linear-gradient(180deg, rgba(88, 166, 255, 0.06) 0%, rgba(22, 31, 40, 0.8) 100%);
+      border: 1px solid var(--line-bright);
+      border-left: 5px solid var(--accent);
+      border-radius: 8px;
+      padding: 1.3rem 1.5rem;
+      margin: 1.2rem 0 1.5rem;
+    }
+    .overview-card.purple {
+      background: linear-gradient(180deg, rgba(188, 140, 255, 0.06) 0%, rgba(22, 31, 40, 0.8) 100%);
+      border-left-color: var(--purple);
+    }
+    .overview-card.green {
+      background: linear-gradient(180deg, rgba(63, 185, 80, 0.06) 0%, rgba(22, 31, 40, 0.8) 100%);
+      border-left-color: var(--green);
+    }
+    .overview-card.yellow {
+      background: linear-gradient(180deg, rgba(240, 193, 75, 0.06) 0%, rgba(22, 31, 40, 0.8) 100%);
+      border-left-color: var(--yellow);
+    }
+    .overview-card.red {
+      background: linear-gradient(180deg, rgba(248, 81, 73, 0.06) 0%, rgba(22, 31, 40, 0.8) 100%);
+      border-left-color: var(--red);
+    }
+
+    .overview-card h3 {
+      margin-top: 0;
+      margin-bottom: 0.6rem;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.8rem;
+    }
+    .overview-item {
+      background: var(--panel);
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+    }
+    .overview-item-label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+    .overview-item-text {
+      font-size: 0.88rem;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .menu-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1.3rem 1.5rem;
+      margin: 1.2rem 0;
+      transition: border-color 0.2s;
+    }
+    .menu-card:hover {
+      border-color: var(--accent);
+    }
+
+    .menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+    .menu-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .menu-path {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+      background: rgba(88, 166, 255, 0.1);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      word-break: break-all;
+    }
+
+    .ui-element {
+      margin: 0.8rem 0;
+      padding: 0.75rem 1.1rem;
+      background: var(--panel);
+      border-radius: 6px;
+      border-left: 3px solid var(--line-bright);
+    }
+    .ui-element-name {
+      font-weight: 600;
+      color: var(--accent);
+      font-size: 0.94rem;
+      margin-bottom: 0.25rem;
+    }
+    .ui-element-desc {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--panel);
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.2rem 0;
+    }
+    .callout.green { border-left-color: var(--green); }
+    .callout.yellow { border-left-color: var(--yellow); }
+    .callout.red { border-left-color: var(--red); }
+    .callout.purple { border-left-color: var(--purple); }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      color: var(--accent);
+      word-break: break-word;
+    }
+
+    /* Responsive Code Containers with Copy Button */
+    .code-container {
+      position: relative;
+      margin: 1.2rem 0;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--code-bg);
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0.8rem;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      font-size: 0.76rem;
+      font-family: ui-monospace, monospace;
+      color: var(--muted);
+    }
+    .copy-btn {
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: all 0.15s ease;
+    }
+    .copy-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .copy-btn.copied {
+      background: rgba(63, 185, 80, 0.2);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    pre {
+      margin: 0;
+      padding: 0.9rem 1.1rem;
+      overflow-x: auto;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      -webkit-overflow-scrolling: touch;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text);
+      word-break: normal;
+      white-space: pre;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.74rem;
+      font-weight: 600;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge.blue { background: rgba(88, 166, 255, 0.15); color: var(--accent); border: 1px solid var(--accent); }
+    .badge.green { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid var(--green); }
+    .badge.yellow { background: rgba(240, 193, 75, 0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+    .badge.purple { background: rgba(188, 140, 255, 0.15); color: var(--purple); border: 1px solid var(--purple); }
+    .badge.red { background: rgba(248, 81, 73, 0.15); color: var(--red); border: 1px solid var(--red); }
+
+    /* Touch-Scrollable Table Container */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.2rem 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      -webkit-overflow-scrolling: touch;
+      background: var(--panel);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 580px; /* guarantees table readability without crushing columns */
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 0.65rem 0.9rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-right: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .jwt-part {
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: bold;
+    }
+    .jwt-header { background: rgba(248, 81, 73, 0.25); color: #ff7b72; border: 1px solid #ff7b72; }
+    .jwt-payload { background: rgba(188, 140, 255, 0.25); color: #d2a8ff; border: 1px solid #d2a8ff; }
+    .jwt-signature { background: rgba(63, 185, 80, 0.25); color: #7ee787; border: 1px solid #7ee787; }
+
+    /* Floating Back to Top Button */
+    #back-to-top {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      z-index: 450;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #back-to-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #back-to-top:active {
+      transform: scale(0.92);
+    }
+
+    /* MOBILE BREAKPOINT: <= 860px */
+    @media (max-width: 860px) {
+      body {
+        flex-direction: column;
+      }
+      .mobile-topbar {
+        display: flex;
+      }
+      .top-books-bar {
+        margin-top: calc(var(--topbar-height) + 0.8rem);
+        margin-bottom: 1.2rem;
+      }
+      main {
+        padding: calc(var(--topbar-height) + 0.8rem) 1rem 5rem;
+        max-width: 100%;
+      }
+      aside {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100vh;
+        width: 85vw;
+        max-width: 320px;
+        transform: translateX(-100%);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+      }
+      aside.open {
+        transform: translateX(0);
+      }
+      .close-drawer-btn {
+        display: flex;
+      }
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
+      .overview-card {
+        padding: 1.1rem;
+      }
+      .menu-card {
+        padding: 1.1rem;
+      }
+      .ui-element {
+        padding: 0.65rem 0.85rem;
+      }
+    }
+
+    /* Small phones <= 480px */
+    @media (max-width: 480px) {
+      main {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+      .mobile-title {
+        max-width: 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Reading Progress Bar -->
+  <div id="progress-container"><div id="progress-bar"></div></div>
+
+  <!-- Mobile Topbar -->
+  <header class="mobile-topbar">
+    <div class="mobile-left">
+      <button class="hamburger-btn" id="drawer-toggle" aria-label="Open Table of Contents">☰</button>
+      <div class="mobile-title">📖 WSO2 Cookbook</div>
+    </div>
+    <div class="mobile-actions">
+      <button class="icon-btn" onclick="adjustFont(-1)" title="Decrease Font">A-</button>
+      <button class="icon-btn" onclick="adjustFont(1)" title="Increase Font">A+</button>
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
+    </div>
+  </header>
+
+  <!-- Mobile Backdrop Overlay -->
+  <div class="backdrop-overlay" id="drawer-backdrop"></div>
+
+  <!-- Sidebar & Navigation Drawer -->
+  <aside id="sidebar-drawer">
+    <div class="sidebar-header">
+      <button class="close-drawer-btn" id="drawer-close" aria-label="Close menu">✕</button>
+      <h1><span>📖</span> WSO2 4.7 Cookbook</h1>
+      <p>Developer Field Manual &amp; UI Reference</p>
+    </div>
+
+    <!-- Companion Books Switcher inside Drawer -->
+    <div class="companion-nav">
+      <div class="companion-label">Documentation Library</div>
+      <div class="companion-links">
+        <a href="index.html" class="active-book"><span>📖 1. APIM 4.7 Cookbook</span><span>Current</span></a>
+        <a href="wso2-portals-guide-book.html"><span>📘 2. Portals Architecture Guide</span><span>Guide</span></a>
+        <a href="working-with-wso2-book.html"><span>📗 3. Field Manual (12 Ch)</span><span>Book</span></a>
+        <a href="architecture-flow-interactive.html"><span>⚡ 4. Architecture Simulator</span><span>Interactive</span></a>
+      </div>
+    </div>
+
+    <!-- Search input -->
+    <div class="drawer-search">
+      <input type="search" id="nav-search-input" placeholder="Search topics, tokens, menus..." />
+    </div>
+
+    <ul class="nav-links" id="sidebar-nav-links">
+      <li class="nav-group-title">Foundations</li>
+      <li><a href="#intro">Portals Architecture</a></li>
+      <li><a href="#devportal-overview">Devportal Navigation</a></li>
+
+      <li class="nav-group-title">Security &amp; Core Concepts</li>
+      <li><a href="#concept-oauth2">1. What is OAuth 2.0?</a></li>
+      <li><a href="#concept-credentials">2. Key vs Secret Demystified</a></li>
+      <li><a href="#concept-tokens-jwt">3. Access Tokens &amp; JWT Anatomy</a></li>
+      <li><a href="#concept-oauth-vs-apikeys">4. OAuth2 vs API Keys</a></li>
+      <li><a href="#concept-pkix-lesson">5. The 900900 SSL Trust Lesson</a></li>
+      <li><a href="#concept-kind-a-b">6. Type 1 (MI) vs Type 2 (Go)</a></li>
+
+      <li class="nav-group-title">Developer Portal Menus</li>
+      <li><a href="#menu-apis">APIs Catalog &amp; Details</a></li>
+      <li><a href="#menu-apps">Applications &amp; Team Sharing</a></li>
+      <li><a href="#menu-subscriptions">Subscriptions &amp; Tiers</a></li>
+      <li><a href="#menu-keys">Production vs Sandbox Keys</a></li>
+      <li><a href="#menu-gen-modal">The Token Generation Modal</a></li>
+      <li><a href="#menu-tryout">API Console (Try Out) &amp; Traps</a></li>
+
+      <li class="nav-group-title">Publisher Portal Menus</li>
+      <li><a href="#pub-catalog">Service Catalog (MI)</a></li>
+      <li><a href="#pub-operations">Operations &amp; The Wildcard Trap</a></li>
+      <li><a href="#pub-working-copy">Working Copy vs Revisions</a></li>
+      <li><a href="#pub-endpoints">Endpoints &amp; Base URL Rule</a></li>
+      <li><a href="#pub-lifecycle">Lifecycle States &amp; Revisions</a></li>
+
+      <li class="nav-group-title">Reference</li>
+      <li><a href="#menu-dictionary">Full UI Menu Dictionary</a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <span>Official WSO2 4.7.0</span>
+      <div class="font-controls">
+        <button class="font-btn" onclick="adjustFont(-1)">A-</button>
+        <button class="font-btn" onclick="adjustFont(1)">A+</button>
+        <button class="font-btn" onclick="toggleTheme()">🌓</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Top Companion Books Switcher Bar -->
+    <nav class="top-books-bar" aria-label="Book Switcher">
+      <span>Library:</span>
+      <a href="index.html" class="book-pill active">📖 APIM 4.7 Cookbook</a>
+      <a href="wso2-portals-guide-book.html" class="book-pill">📘 Portals Architecture Guide</a>
+      <a href="working-with-wso2-book.html" class="book-pill">📗 Field Manual (12 Ch)</a>
+      <a href="architecture-flow-interactive.html" class="book-pill">⚡ Architecture Simulator</a>
+    </nav>
+
+    <!-- SECTION: INTRO -->
+    <section id="intro">
+      <h1>WSO2 APIM 4.7 Portals &amp; Security Cookbook</h1>
+      <p class="muted">An official, comprehensive manual explaining <strong>how to use the WSO2 Web Portals</strong> as an application developer and API creator. This guide explains every concept (OAuth2, JWTs, Access Tokens, API Keys, SSL Trust Chains) and walks through every screen, menu option, dropdown, and button with zero guesswork.</p>
+
+      <div class="callout blue">
+        <strong>UI Focus:</strong> Everything here happens in your web browser at <code>https://devportal.parspc.ir/devportal</code> and <code>https://publisher.parspc.ir/publisher</code>.
+      </div>
+
+      <h2>The Two Portals You Work With</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Portal</th>
+              <th>URL Path</th>
+              <th>Primary Persona</th>
+              <th>What It Does</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Publisher Portal</strong></td>
+              <td><code>https://publisher.parspc.ir/publisher</code></td>
+              <td>API Creator / Backend Dev</td>
+              <td>Creates APIs from Micro Integrator (MI) or developer services (Go), defines resources, sets endpoints, configures policies, and manages lifecycle.</td>
+            </tr>
+            <tr>
+              <td><strong>Developer Portal</strong></td>
+              <td><code>https://devportal.parspc.ir/devportal</code></td>
+              <td>API Consumer / App Dev</td>
+              <td>Discovers APIs, manages client Applications, subscribes to rate tiers, generates OAuth2/API keys, rotates secrets, and tests endpoints.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION: DEVPORTAL OVERVIEW -->
+    <section id="devportal-overview">
+      <h2>Developer Portal Overview &amp; Navigation</h2>
+      <div class="overview-card green">
+        <h3>🧭 The Consumer Journey</h3>
+        <p>The <strong>Developer Portal (`/devportal`)</strong> is the storefront of your API ecosystem. It is designed for software engineers building consumer applications (web frontends, mobile apps, daemons, backend integrators).</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-header">
+          <span class="menu-title">The 5 Core Steps to Consuming an API</span>
+          <span class="menu-path">Devportal ➔ End-to-End Workflow</span>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Step 1: Explore &amp; Discover</div>
+          <p class="ui-element-desc">Browse the <strong>APIs</strong> catalog. Read technical descriptions, review OpenAPI/Swagger schemas, verify rate tiers, and inspect operation schemas.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Step 2: Create an Application</div>
+          <p class="ui-element-desc">Go to <strong>Applications</strong> ➔ <em>Add New Application</em> (e.g. <code>LabApp</code>). The Application is your logical client identity container that holds your security credentials and rate quotas.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Step 3: Subscribe to API</div>
+          <p class="ui-element-desc">Under <strong>Subscriptions</strong>, bind your Application to the desired API (e.g., <code>CustomerServices 1.0.0</code>) and choose your throttling policy (e.g. <code>Unlimited</code> or <code>50PerMin</code>).</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Step 4: Generate Production / Sandbox Keys</div>
+          <p class="ui-element-desc">Under <strong>Production Keys</strong>, generate your OAuth2 Consumer Key &amp; Consumer Secret or click <em>Generate Access Token</em> to obtain a live signed JWT.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Step 5: Test &amp; Integrate</div>
+          <p class="ui-element-desc">Use the in-browser <strong>API Console (Try Out)</strong> or run cURL from your terminal with <code>Authorization: Bearer &lt;token&gt;</code> against the Gateway URL <code>https://api.parspc.ir</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: WHAT IS OAUTH 2.0 -->
+    <section id="concept-oauth2">
+      <h2><span class="step-badge">1</span> What is OAuth 2.0? (The Core Principle)</h2>
+
+      <div class="overview-card green">
+        <h3>🛡️ Concept Overview: Delegated Authorization</h3>
+        <p><strong>What is OAuth 2.0?</strong> It is an open-standard security framework that allows client applications (like your frontend website, mobile app, or cURL script) to access backend API resources <strong>without passing permanent passwords over the network on every request</strong>.</p>
+        <div class="overview-grid">
+          <div class="overview-item">
+            <div class="overview-item-label">The Old, Broken Way</div>
+            <p class="overview-item-text">Sending permanent usernames and passwords in HTTP headers on every API call. If a hacker intercepts one packet or a server logs the header, your master password is leaked forever.</p>
+          </div>
+          <div class="overview-item">
+            <div class="overview-item-label">The OAuth 2.0 Way</div>
+            <p class="overview-item-text">You prove your identity to the <strong>Key Manager</strong> once. It gives you a temporary, signed <strong>Bearer Token</strong> (ticket) that only works for a short time (e.g. 1 hour) and has limited permissions.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>The 4 Actors in WSO2 OAuth2:</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>OAuth 2.0 Actor</th>
+              <th>WSO2 Component</th>
+              <th>Real-World Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Client</strong></td>
+              <td>Your <strong>Application</strong> (e.g. <code>LabApp</code>)</td>
+              <td>The software wanting to call the API (a mobile app, web dashboard, or backend script).</td>
+            </tr>
+            <tr>
+              <td><strong>Authorization Server</strong></td>
+              <td>WSO2 <strong>Key Manager</strong> (Resident / Okta / Keycloak)</td>
+              <td>The security guard that verifies client credentials and issues signed access tokens.</td>
+            </tr>
+            <tr>
+              <td><strong>Resource Server</strong></td>
+              <td>WSO2 <strong>API Gateway</strong> (`api.parspc.ir`)</td>
+              <td>The gateway that checks incoming tokens, validates signatures, and enforces rate limits.</td>
+            </tr>
+            <tr>
+              <td><strong>Backend Service</strong></td>
+              <td>Micro Integrator (MI) or <strong>Go Microservice</strong></td>
+              <td>The actual database or code that produces business data.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION: KEY VS SECRET -->
+    <section id="concept-credentials">
+      <h2><span class="step-badge">2</span> Consumer Key vs. Consumer Secret Demystified</h2>
+
+      <div class="overview-card yellow">
+        <h3>🔑 Concept Overview: The Identity Pair</h3>
+        <p>In Developer Portal ➔ <strong>Production Keys</strong>, WSO2 generates two strings. Many developers confuse them, but they have completely different security roles:</p>
+        <div class="overview-grid">
+          <div class="overview-item">
+            <div class="overview-item-label">Consumer Key (Public ID)</div>
+            <p class="overview-item-text"><strong>Equivalent to a Username.</strong> It is the unique public identifier of your Application (e.g. <code>IUs4tCrgSTVoLuw5K6pEuu_uiz8a</code>). It is safe to embed in client configurations.</p>
+          </div>
+          <div class="overview-item">
+            <div class="overview-item-label">Consumer Secret (Private Password)</div>
+            <p class="overview-item-text"><strong>Equivalent to a Master Password.</strong> It is the private secret (e.g. <code>WntNBAHu6DU9ZlwH8k5SZ6LQQoMa</code>). It must NEVER be exposed publicly or committed to Git. Used strictly to prove to the Key Manager that your app is genuine.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout purple">
+        <strong>Why did Devportal prompt for the Consumer Secret earlier?</strong>
+        <br>When you clicked <em>"Generate Access Token"</em> or <em>"GET TEST KEY"</em> in Try Out, WSO2 asked: <code>"Enter the consumer secret for the selected application"</code>.
+        <br>Because the Consumer Secret is a master password, WSO2 will not store it in plain text in your browser session for security reasons. You enter the secret, and WSO2 executes the OAuth2 <strong>Client Credentials</strong> exchange to hand you an access token.
+      </div>
+    </section>
+
+    <!-- SECTION: TOKENS & JWT -->
+    <section id="concept-tokens-jwt">
+      <h2><span class="step-badge">3</span> Access Tokens &amp; Inside a Live JWT</h2>
+
+      <div class="overview-card">
+        <h3>🎟️ Concept Overview: What is an Access Token?</h3>
+        <p>An <strong>Access Token</strong> is a temporary digital credential presented in the HTTP <code>Authorization: Bearer &lt;token&gt;</code> header. In WSO2 APIM 4.7, tokens are formatted as <strong>JWTs (JSON Web Tokens)</strong>.</p>
+      </div>
+
+      <h3>Anatomy of a Real JWT (Dissecting Your Generated Token):</h3>
+      <p>A JWT consists of three parts separated by dots: <span class="jwt-part jwt-header">Header</span>.<span class="jwt-part jwt-payload">Payload</span>.<span class="jwt-part jwt-signature">Signature</span></p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>LIVE JWT TOKEN</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+        </div>
+        <pre><code><span class="jwt-part jwt-header">eyJ4NXQiOiJZMkUxWXpsaU5UUm1PV...</span>.<span class="jwt-part jwt-payload">eyJzdWIiOiJkYzNkMjY5Mi1jMWJiLT...</span>.<span class="jwt-part jwt-signature">mwPaHSMrtzEB5aHRtVeaG9AGjltb3...</span></code></pre>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>JWT Section</th>
+              <th>Decoded Content from Today's Live Token</th>
+              <th>What It Tells the Gateway</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong style="color:#ff7b72;">1. Header</strong></td>
+              <td>
+                <code>"alg": "RS256"</code><br>
+                <code>"kid": "Y2E1YzliNTRmOWI2..._RS256"</code>
+              </td>
+              <td>Specifies the cryptographic algorithm (RSA-SHA256) and the Key ID (thumbprint of the public certificate used to verify the signature).</td>
+            </tr>
+            <tr>
+              <td><strong style="color:#d2a8ff;">2. Payload (Claims)</strong></td>
+              <td>
+                <code>"iss": "https://publisher.parspc.ir:443/oauth2/token"</code><br>
+                <code>"client_id": "IUs4tCrgSTVoLuw5K6pEuu_uiz8a"</code><br>
+                <code>"scope": "default"</code><br>
+                <code>"exp": 1790714410</code> (Unix timestamp)
+              </td>
+              <td>
+                <strong>Issuer:</strong> Who created this token (Resident Key Manager).<br>
+                <strong>Client ID:</strong> Which Application owns this token (<code>LabApp</code>).<br>
+                <strong>Scope:</strong> Allowed permissions.<br>
+                <strong>Expiration:</strong> When the token becomes invalid.
+              </td>
+            </tr>
+            <tr>
+              <td><strong style="color:#7ee787;">3. Signature</strong></td>
+              <td>Cryptographic hash of Header + Payload signed with Key Manager's Private Key.</td>
+              <td>Guarantees that nobody tampered with the payload. If an attacker modifies the expiration time or client ID by 1 bit, the signature fails!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout green">
+        <strong>The Big Advantage of JWT: Stateless Verification!</strong>
+        <br>Because all permissions, expiration dates, and signatures are packed inside the token itself, the WSO2 Gateway can validate your token completely in memory (RAM) in <strong>0.1 milliseconds</strong> without having to query a database on every API request.
+      </div>
+    </section>
+
+    <!-- SECTION: OAUTH2 VS API KEYS -->
+    <section id="concept-oauth-vs-apikeys">
+      <h2><span class="step-badge">4</span> OAuth 2.0 vs. API Keys: The Definitive Comparison</h2>
+
+      <div class="overview-card purple">
+        <h3>⚖️ Concept Overview: Picking the Right Authentication Method</h3>
+        <p>WSO2 APIM 4.7 supports both <strong>OAuth 2.0 Tokens</strong> and lightweight <strong>API Keys</strong>. Here is how they compare:</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>OAuth 2.0 Bearer Token</th>
+              <th>API Key (WSO2 APIM 4.7)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>How it is passed</strong></td>
+              <td><code>Authorization: Bearer &lt;jwt&gt;</code></td>
+              <td><code>ApiKey: &lt;key&gt;</code> (or query param)</td>
+            </tr>
+            <tr>
+              <td><strong>Lifespan</strong></td>
+              <td>Short-lived (typically 60 minutes)</td>
+              <td>Long-lived (weeks / months / unlimited)</td>
+            </tr>
+            <tr>
+              <td><strong>Token Acquisition</strong></td>
+              <td>Requires a 2-step handshake (exchange Key + Secret at <code>/oauth2/token</code>)</td>
+              <td>Generated directly in Devportal; no exchange step needed</td>
+            </tr>
+            <tr>
+              <td><strong>Key Rotation</strong></td>
+              <td>Automatic via Refresh Tokens</td>
+              <td>Manual or programmatic, with a <strong>1-hour grace period</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Granular Permissions</strong></td>
+              <td>Yes (OAuth Scopes, User context, Roles)</td>
+              <td>Limited (API-specific or Application-bound)</td>
+            </tr>
+            <tr>
+              <td><strong>Best Used For</strong></td>
+              <td>User-facing web apps, mobile apps, third-party integrations, high-security APIs</td>
+              <td>Internal microservices, batch daemons, IoT devices, simple scripts</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION: THE 900900 SSL LESSON -->
+    <section id="concept-pkix-lesson">
+      <h2><span class="step-badge">5</span> The `900900` Error &amp; The SSL Trust Chain Mystery</h2>
+
+      <div class="overview-card red">
+        <h3>🔍 The Root Cause Explained: What Went Wrong &amp; How We Fixed It</h3>
+        <p>Earlier today, our first live test failed with <code>500 {"code":"900900", "message":"Unclassified Authentication Failure"}</code>. Here is the technical breakdown of what happened under the hood:</p>
+      </div>
+
+      <div class="callout red">
+        <strong>The Chain of Events:</strong>
+        <ol>
+          <li>Your client invoked <code>https://api.parspc.ir/customers/1.0.0/customers</code> with the JWT token.</li>
+          <li>The APIM Gateway inspected the token's <code>"iss"</code> (Issuer) claim:
+            <br><code>"iss": "https://publisher.parspc.ir:443/oauth2/token"</code></li>
+          <li>To verify that the token was legitimately issued by the Resident Key Manager, the Gateway initiated an internal HTTPS call to <code>https://publisher.parspc.ir:443</code>.</li>
+          <li><code>publisher.parspc.ir:443</code> is served by <strong>NGINX</strong> using the lab self-signed certificate: <strong>`parspc-lab.crt`</strong>.</li>
+          <li>Java on the APIM node checked its truststore: <code>client-truststore.jks</code>.</li>
+          <li><strong>The Crash:</strong> <code>parspc-lab.crt</code> was <strong>NOT</strong> in APIM's truststore! Java aborted the connection with:
+            <div class="code-container" style="margin: 0.6rem 0;">
+              <pre><code>sun.security.validator.ValidatorException: PKIX path building failed: 
+sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path</code></pre>
+            </div>
+          </li>
+          <li>Because the Gateway could not reach the issuer, it returned <code>900900 Unclassified Authentication Failure</code>.</li>
+        </ol>
+      </div>
+
+      <div class="callout green">
+        <strong>The Permanent Fix:</strong>
+        <br>We extracted <code>parspc-lab.crt</code> from NGINX and imported it into <code>/opt/wso2/wso2am-4.7.0/repository/resources/security/client-truststore.jks</code> (alias <code>parspc-lab</code>) on <strong>both `wso-apim-1` and `wso-apim-2`</strong>.
+        <br>Immediately, Java trusted the SSL handshake, validated the token, and returned <strong>HTTP 200 OK</strong>!
+      </div>
+    </section>
+
+    <!-- SECTION: TYPE 1 VS TYPE 2 -->
+    <section id="concept-kind-a-b">
+      <h2><span class="step-badge">6</span> Type 1 (Kind B / MI) vs. Type 2 (Kind A / Go Microservice)</h2>
+
+      <div class="overview-card green">
+        <h3>🏛️ Enterprise Architectural Taxonomy</h3>
+        <p>In WSO2, all APIs fall into one of two fundamental architectural patterns:</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Attribute</th>
+              <th>Type 1 (Kind B) — Data Integration</th>
+              <th>Type 2 (Kind A) — Developer Service</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Lab Example</strong></td>
+              <td><strong>`phonebook`</strong> (SQL Server <code>dbo.Contacts</code>)</td>
+              <td><strong>`CustomerServices`</strong> (Written in <strong>Go</strong>)</td>
+            </tr>
+            <tr>
+              <td><strong>Source of Data</strong></td>
+              <td>Raw database tables, stored procedures, SOAP backends</td>
+              <td>Existing REST microservice written by software developers</td>
+            </tr>
+            <tr>
+              <td><strong>Role of Micro Integrator (MI)</strong></td>
+              <td><strong>Required.</strong> Transforms JDBC SQL rows into REST JSON payloads.</td>
+              <td><strong>Bypassed completely!</strong> The service already speaks HTTP/JSON.</td>
+            </tr>
+            <tr>
+              <td><strong>How API is Created</strong></td>
+              <td>Discovered via MI <strong>Service Catalog</strong> ➔ "Create API" wizard.</td>
+              <td>Publisher ➔ <strong>Design a New REST API</strong> (enter endpoint URL directly).</td>
+            </tr>
+            <tr>
+              <td><strong>Network Flow</strong></td>
+              <td>Client ➔ NGINX ➔ APIM Gateway ➔ <strong>MI (:8290)</strong> ➔ SQL Server (:1433)</td>
+              <td>Client ➔ NGINX ➔ APIM Gateway ➔ <strong>Go Service (:5000)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION: MENU APIS -->
+    <section id="menu-apis">
+      <h2>Developer Portal: APIs Catalog &amp; Details View</h2>
+      <div class="overview-card">
+        <h3>📚 Navigating the API Marketplace</h3>
+        <p>Clicking <strong>APIs</strong> in the Devportal header opens the catalog of all published digital APIs available for consumption across your organization.</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-header">
+          <span class="menu-title">API Details Tabs</span>
+          <span class="menu-path">Devportal ➔ APIs ➔ [Select API]</span>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Overview Tab</div>
+          <p class="ui-element-desc">Displays business metadata, version, owner contact, available subscription tiers, and public Gateway URLs for HTTP and HTTPS.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Documentation Tab</div>
+          <p class="ui-element-desc">Technical manuals, markdown guides, PDF attachments, or external links provided by the API publisher to explain payload formats and error codes.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">API Console (Try Out) Tab</div>
+          <p class="ui-element-desc">Interactive Swagger UI where you can generate test tokens, set query parameters, submit live HTTP calls directly in your browser, and inspect real response headers.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">SDKs Tab</div>
+          <p class="ui-element-desc">Auto-generated client libraries for Java, Python, Go, Node.js, and Android based on the API's OpenAPI specification.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: MENU APPS -->
+    <section id="menu-apps">
+      <h2>Developer Portal: Applications &amp; Team Sharing</h2>
+      <div class="overview-card purple">
+        <h3>📦 Why Applications Exist in WSO2</h3>
+        <p>In WSO2, <strong>you do not subscribe to an API as a human user</strong>. You subscribe an <strong>Application</strong>. An Application is a logical security and throttling container representing your client software.</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-header">
+          <span class="menu-title">Application Management Controls</span>
+          <span class="menu-path">Devportal ➔ Applications ➔ [Select Application]</span>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Token Type (JWT vs OAuth)</div>
+          <p class="ui-element-desc">Choose between <strong>JWT</strong> (self-contained, validated in memory by the Gateway in 0.1ms) and <strong>OAuth</strong> (opaque reference token requiring back-channel validation). Always default to JWT.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Per-Application Rate Limiting (Token Bucket)</div>
+          <p class="ui-element-desc">Assign a global quota (e.g. <code>50 Per Min</code>) to the entire application across all APIs it invokes, preventing runaway client bugs from overwhelming infrastructure.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Team Sharing &amp; Groups</div>
+          <p class="ui-element-desc">Share an Application with your engineering team or Active Directory / LDAP groups so multiple developers can view keys, rotate secrets, and debug without sharing personal passwords.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: MENU SUBSCRIPTIONS -->
+    <section id="menu-subscriptions">
+      <h2>Developer Portal: Subscriptions &amp; Tiers</h2>
+      <div class="overview-card green">
+        <h3>🔗 Binding Applications to APIs</h3>
+        <p>A <strong>Subscription</strong> is the contractual bridge linking an Application (consumer) to an API (provider). Without a subscription, the Gateway will reject requests with <code>900908 Resource forbidden</code> even if the OAuth2 token is valid!</p>
+      </div>
+
+      <div class="callout green">
+        <strong>Subscription Workflow:</strong>
+        <ol>
+          <li>Navigate to your Application (e.g. <code>LabApp</code>) ➔ <strong>Subscriptions</strong> tab.</li>
+          <li>Select the API from the dropdown (e.g. <code>CustomerServices 1.0.0</code>).</li>
+          <li>Select a Business Plan (e.g., <code>Unlimited</code>, <code>Gold - 50req/min</code>).</li>
+          <li>Click <strong>Subscribe</strong>. Depending on API settings, the subscription is active immediately or enters a pending approval queue for API administrators.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- SECTION: MENU KEYS -->
+    <section id="menu-keys">
+      <h2>Developer Portal: Production vs. Sandbox Keys</h2>
+      <div class="overview-card yellow">
+        <h3>🔑 Dual Environment Isolation</h3>
+        <p>WSO2 generates completely separate credentials for <strong>Production</strong> and <strong>Sandbox</strong> environments, ensuring test traffic never touches production resources.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Credential Type</th>
+              <th>Production Keys</th>
+              <th>Sandbox Keys</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Target Gateway</strong></td>
+              <td><code>https://api.parspc.ir</code></td>
+              <td>Sandbox Gateway endpoint</td>
+            </tr>
+            <tr>
+              <td><strong>Backend Target</strong></td>
+              <td>Live production databases &amp; services</td>
+              <td>Mock servers, staging environments, QA databases</td>
+            </tr>
+            <tr>
+              <td><strong>Quota Accounting</strong></td>
+              <td>Enforces production SLAs and rate limits</td>
+              <td>Permissive testing quotas with isolated counters</td>
+            </tr>
+            <tr>
+              <td><strong>Credential Pair</strong></td>
+              <td>Dedicated Consumer Key &amp; Secret</td>
+              <td>Separate Consumer Key &amp; Secret</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DEVPORTAL TOKEN GENERATION MODAL -->
+    <section id="menu-gen-modal">
+      <h2>Developer Portal: The "Generate Access Token" Modal Walkthrough</h2>
+
+      <div class="overview-card">
+        <h3>Pop-Up Dialog Controls Explained</h3>
+        <p>When you click <strong>Generate Access Token</strong> under <code>LabApp</code> ➔ Production Keys, this dialog handles the OAuth2 Client Credentials exchange:</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="ui-element">
+          <div class="ui-element-name">Consumer Secret Input Box</div>
+          <p class="ui-element-desc">Paste your application's private master secret (e.g. <code>WntNBAHu6DU9ZlwH8k5SZ6LQQoMa</code>). The `GENERATE` button remains disabled until this is provided.</p>
+        </div>
+
+        <div class="ui-element">
+          <div class="ui-element-name">Scopes Dropdown</div>
+          <p class="ui-element-desc">Optional filter. If the API creator defined fine-grained permission scopes (like <code>read:customers</code>), you select them here. Leaving it blank requests the <code>default</code> scope (full access to all subscribed operations).</p>
+        </div>
+
+        <div class="ui-element">
+          <div class="ui-element-name">The "GENERATE" Button</div>
+          <p class="ui-element-desc">Submits the credentials to the Key Manager. The Key Manager verifies the hash, packages the JWT with a 1-hour expiration timestamp, signs it, and returns the Bearer token string to your clipboard.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: MENU TRYOUT -->
+    <section id="menu-tryout">
+      <h2>Developer Portal: API Console (Try Out) &amp; Traps</h2>
+      <div class="overview-card red">
+        <h3>⚠️ The 3 Most Common Traps in Try Out Console</h3>
+        <p>The Try Out console allows executing live HTTP calls directly inside the browser. Beware of these common traps that cause requests to fail:</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="ui-element">
+          <div class="ui-element-name">Trap 1: The "Failed to fetch" Browser SSL Block</div>
+          <p class="ui-element-desc">
+            If your lab uses a self-signed SSL certificate, your browser will block background JavaScript <code>fetch()</code> calls with <code>TypeError: Failed to fetch</code>.
+            <br><strong>Solution:</strong> Open a new browser tab, visit <code>https://api.parspc.ir</code> directly, click <em>Advanced ➔ Proceed to site</em> to accept the certificate once, then return to Devportal and click Execute!
+          </p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Trap 2: Error 900908 (Resource Forbidden)</div>
+          <p class="ui-element-desc">Occurs when you generated a token for <code>LabApp</code>, but forgot to subscribe <code>LabApp</code> to the specific API. The token is valid, but the subscription check fails.</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Trap 3: Expired Bearer Token</div>
+          <p class="ui-element-desc">Default test tokens expire after 3600 seconds (1 hour). If the console returns <code>900901 Invalid Credentials</code>, click <em>GET TEST KEY</em> again to refresh.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: PUB CATALOG -->
+    <section id="pub-catalog">
+      <h2>Publisher: Service Catalog &amp; Micro Integrator (MI)</h2>
+      <div class="overview-card green">
+        <h3>⚙️ Automated Service Discovery</h3>
+        <p>In WSO2 APIM 4.7, <strong>Micro Integrator (MI 4.5)</strong> communicates directly with Publisher via HTTPS. When you deploy a CAR file or Data Service on MI, it registers the service into Publisher's <strong>Service Catalog</strong>.</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-header">
+          <span class="menu-title">Service Catalog Actions</span>
+          <span class="menu-path">Publisher ➔ Services</span>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">The Service Grid</div>
+          <p class="ui-element-desc">Displays all active services reported by MI instances (e.g., <code>phonebook 1.0.0</code>). Shows service key, version, and the internal backend URL (<code>http://wso-mi-1:8290/services/phonebook.HTTPEndpoint</code>).</p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">The "Create API" Button</div>
+          <p class="ui-element-desc">Clicking <strong>Create API</strong> on a catalog entry launches an automated wizard that auto-populates endpoints, resources, and Swagger specs directly from the MI integration artifact!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPANDED PUBLISHER OPERATIONS -->
+    <section id="pub-operations">
+      <h2>Publisher: Operations Configuration &amp; The `/*` Wildcard Trap</h2>
+
+      <div class="overview-card yellow">
+        <h3>⚡ Screen Walkthrough: How Resources are Mapped</h3>
+        <p>When you designed the <code>CustomerServices</code> API in Publisher, you encountered the <strong>Operations Configuration</strong> screen:</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-header">
+          <span class="menu-title">Operations Screen Controls</span>
+          <span class="menu-path">Publisher ➔ [Select API] ➔ API Configurations ➔ Resources</span>
+        </div>
+
+        <div class="ui-element">
+          <div class="ui-element-name">Rate Limiting Level (API Level vs Operation Level)</div>
+          <p class="ui-element-desc">
+            • <strong>API Level:</strong> All paths share the same quota (e.g., 50 req/min across the entire API).
+            <br>• <strong>Operation Level:</strong> Allows assigning different tiers to different methods (e.g. <code>GET /customers</code> allows 100 req/min, but <code>POST /customers</code> only allows 10 req/min to prevent write spamming).
+          </p>
+        </div>
+
+        <div class="ui-element">
+          <div class="ui-element-name">HTTP Verb &amp; URI Pattern Box</div>
+          <p class="ui-element-desc">Select the HTTP method (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>) and type the path (e.g. <code>/customers</code>).</p>
+        </div>
+
+        <div class="ui-element">
+          <div class="ui-element-name">The Blue "+" Button (Critical Step!)</div>
+          <p class="ui-element-desc">Typing the path in the box is not enough! You <strong>must click the blue `+` button</strong> to append the operation to the API definition before clicking Save.</p>
+        </div>
+
+        <div class="ui-element">
+          <div class="ui-element-name">The Default `/*` Wildcard Trap</div>
+          <p class="ui-element-desc">
+            By default, WSO2 generates catch-all wildcard operations: <code>get /*</code>, <code>put /*</code>, <code>post /*</code>.
+            <br><strong>Best Practice:</strong> Delete the wildcard section using the <strong>Trash Can icon</strong>! Leaving wildcards makes your Swagger documentation generic and confusing to frontend developers. Defining explicit paths (like <code>GET /customers</code>) produces clean, professional API contracts.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKING COPY VS REVISIONS -->
+    <section id="pub-working-copy">
+      <h2>Publisher: Working Copy vs. Revisions (Why Publish was Greyed Out)</h2>
+
+      <div class="overview-card purple">
+        <h3>🔒 The Immutability Model in WSO2 APIM 4.x</h3>
+        <p>In our session, you noticed the <strong>Publish</strong> button was greyed out, and the top bar said <code>Revision 1 [Read Only]</code>. Here is how WSO2's revision model works:</p>
+      </div>
+
+      <div class="callout purple">
+        <strong>The Difference Between Working Copy &amp; Revision:</strong>
+        <ul>
+          <li><strong>Working Copy (Mutable / Draft):</strong> This is your active design canvas. Here, you can edit endpoints, add resources, change security, and transition lifecycles (Publish / Deprecate).</li>
+          <li><strong>Revision (Immutable / Snapshot):</strong> When you click <em>"Deploy Revision"</em>, WSO2 takes a read-only snapshot (e.g. <code>Revision 1</code>) and deploys it to the Gateway nodes. Because revisions are historical records, <strong>the UI locks into `[Read Only]` mode</strong> while viewing a revision!</li>
+        </ul>
+        <strong>The Solution:</strong> Look at the top dropdown menu where it says <code>Revision 1 ▾</code>. Click it and select <strong>`Working Copy`</strong>. Immediately, edit mode unlocks and the <strong>Publish</strong> button turns blue!
+      </div>
+    </section>
+
+    <!-- SECTION: PUB ENDPOINTS -->
+    <section id="pub-endpoints">
+      <h2>Publisher: Endpoints Configuration &amp; Base URL Rule</h2>
+      <div class="overview-card">
+        <h3>🎯 URL Suffix Arithmetic Explained</h3>
+        <p>When the Gateway forwards a request to the backend service, it automatically calculates the final target URL using <strong>Base URL + Resource Path</strong>.</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-header">
+          <span class="menu-title">Endpoint Arithmetic Example</span>
+          <span class="menu-path">Publisher ➔ API Configurations ➔ Endpoints</span>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Production Endpoint Base URL</div>
+          <p class="ui-element-desc"><code>http://wso-mi-1:8290/services/phonebook.HTTPEndpoint</code></p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Resource Path Defined in Publisher</div>
+          <p class="ui-element-desc"><code>/phones</code></p>
+        </div>
+        <div class="ui-element">
+          <div class="ui-element-name">Final URL Called by Gateway</div>
+          <p class="ui-element-desc"><code>http://wso-mi-1:8290/services/phonebook.HTTPEndpoint/phones</code></p>
+        </div>
+      </div>
+
+      <div class="callout yellow">
+        <strong>The Trailing Slash Warning:</strong>
+        <br>Never put a trailing slash <code>/</code> at the end of your Backend Endpoint URL if your resource path begins with <code>/</code> (e.g. <code>http://backend:5000/</code> + <code>/customers</code> = <code>http://backend:5000//customers</code>). Double slashes cause many web frameworks to return HTTP 404 Not Found!
+      </div>
+    </section>
+
+    <!-- SECTION: PUB LIFECYCLE -->
+    <section id="pub-lifecycle">
+      <h2>Publisher: Lifecycle States &amp; Revisions</h2>
+      <div class="overview-card green">
+        <h3>🔄 The API Lifecycle Pipeline</h3>
+        <p>APIs in WSO2 APIM move through formal lifecycle stages to protect downstream consumers from unexpected breaking changes.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Lifecycle State</th>
+              <th>Devportal Visibility</th>
+              <th>Gateway Status</th>
+              <th>When to Use</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>CREATED</strong></td>
+              <td>Invisible</td>
+              <td>Not deployed</td>
+              <td>Initial draft; configuring endpoints and operations.</td>
+            </tr>
+            <tr>
+              <td><strong>PROTOTYPED</strong></td>
+              <td>Visible (marked Prototype)</td>
+              <td>Deployed</td>
+              <td>Providing mock data or sandbox endpoints for early consumer testing.</td>
+            </tr>
+            <tr>
+              <td><strong>PUBLISHED</strong></td>
+              <td>Fully visible</td>
+              <td>Active on Gateways</td>
+              <td>Live production API available for subscription and token generation.</td>
+            </tr>
+            <tr>
+              <td><strong>BLOCKED</strong></td>
+              <td>Visible</td>
+              <td>Rejects traffic (503)</td>
+              <td>Temporary emergency block without deleting subscriptions.</td>
+            </tr>
+            <tr>
+              <td><strong>DEPRECATED</strong></td>
+              <td>Visible to existing subs</td>
+              <td>Active</td>
+              <td>Phase-out stage. Existing apps still function, but new subscriptions are blocked.</td>
+            </tr>
+            <tr>
+              <td><strong>RETIRED</strong></td>
+              <td>Removed</td>
+              <td>Undeployed</td>
+              <td>Decommissioned; endpoint removed from Gateway.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SUMMARY MATRIX -->
+    <section id="menu-dictionary">
+      <h2>Quick Reference: Complete UI &amp; Security Dictionary</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Concept / Term</th>
+              <th>Location</th>
+              <th>Plain English Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Consumer Key</strong></td>
+              <td>Production Keys</td>
+              <td>The Application's public identifier (Username). Safe to share.</td>
+            </tr>
+            <tr>
+              <td><strong>Consumer Secret</strong></td>
+              <td>Production Keys</td>
+              <td>The Application's master private password. Never commit or leak.</td>
+            </tr>
+            <tr>
+              <td><strong>Access Token</strong></td>
+              <td>Authorization Header</td>
+              <td>Temporary Bearer credential (JWT) used for live API requests.</td>
+            </tr>
+            <tr>
+              <td><strong>JWT (JSON Web Token)</strong></td>
+              <td>Token Payload</td>
+              <td>Self-contained, digitally signed token verified in RAM in 0.1ms.</td>
+            </tr>
+            <tr>
+              <td><strong>API Key</strong></td>
+              <td>Credentials Tab</td>
+              <td>Lightweight, long-lived key with a 1-hour rotation grace period.</td>
+            </tr>
+            <tr>
+              <td><strong>Working Copy</strong></td>
+              <td>Publisher Header</td>
+              <td>Editable draft canvas. You must be here to click Publish.</td>
+            </tr>
+            <tr>
+              <td><strong>Revision</strong></td>
+              <td>Deployments Tab</td>
+              <td>Immutable, read-only snapshot deployed to Gateway nodes.</td>
+            </tr>
+            <tr>
+              <td><strong>900900 Error</strong></td>
+              <td>Gateway Response</td>
+              <td>Authentication failure due to SSL trust (PKIX) or Key Manager down.</td>
+            </tr>
+            <tr>
+              <td><strong>900908 Error</strong></td>
+              <td>Gateway Response</td>
+              <td>Subscription validation failed; token is valid, but app is not subscribed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating Back to Top Button -->
+  <button id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Back to Top">↑</button>
+
+  <script>
+    // Drawer open / close
+    const drawerToggle = document.getElementById('drawer-toggle');
+    const drawerClose = document.getElementById('drawer-close');
+    const sidebar = document.getElementById('sidebar-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+
+    function openDrawer() {
+      sidebar.classList.add('open');
+      backdrop.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    if (drawerToggle) drawerToggle.addEventListener('click', openDrawer);
+    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+    // Auto-close drawer on link click on mobile
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 860) {
+          closeDrawer();
+        }
+      });
+    });
+
+    // Reading progress & Active section spy & Back to top visibility
+    const backToTopBtn = document.getElementById('back-to-top');
+    const progressBar = document.getElementById('progress-bar');
+    const sections = document.querySelectorAll('section');
+    const navAnchors = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+      if (progressBar) progressBar.style.width = scrolled + '%';
+
+      if (backToTopBtn) {
+        if (scrollY > 350) {
+          backToTopBtn.classList.add('visible');
+        } else {
+          backToTopBtn.classList.remove('visible');
+        }
+      }
+
+      let currentSection = '';
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 140;
+        if (scrollY >= top) {
+          currentSection = sec.getAttribute('id');
+        }
+      });
+
+      navAnchors.forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + currentSection) {
+          a.classList.add('active');
+        }
+      });
+    });
+
+    // Theme toggle
+    function toggleTheme() {
+      const isLight = document.body.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.body.removeAttribute('data-theme');
+        localStorage.setItem('wso2_theme', 'dark');
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+        localStorage.setItem('wso2_theme', 'light');
+      }
+    }
+
+    const savedTheme = localStorage.getItem('wso2_theme');
+    if (savedTheme === 'light') {
+      document.body.setAttribute('data-theme', 'light');
+    }
+
+    // Font scale
+    let currentScale = parseInt(localStorage.getItem('wso2_font_scale') || '100', 10);
+    function applyFontScale(scale) {
+      currentScale = Math.min(130, Math.max(85, scale));
+      document.documentElement.style.setProperty('--font-scale', currentScale + '%');
+      localStorage.setItem('wso2_font_scale', currentScale);
+    }
+    function adjustFont(delta) {
+      applyFontScale(currentScale + (delta * 5));
+    }
+    if (currentScale !== 100) {
+      applyFontScale(currentScale);
+    }
+
+    // Code copy utility
+    function copyCode(btn) {
+      const container = btn.closest('.code-container');
+      if (!container) return;
+      const codeElem = container.querySelector('pre code');
+      if (!codeElem) return;
+      const text = codeElem.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerText = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerText = '📋 Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Client-side search in drawer
+    const searchInput = document.getElementById('nav-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('.nav-links li').forEach(li => {
+          if (li.classList.contains('nav-group-title')) return;
+          const text = li.innerText.toLowerCase();
+          li.style.display = text.includes(query) ? '' : 'none';
+        });
+      });
+    }
+  </script>
+</body>
+</html>
